@@ -27,7 +27,9 @@ Cross-repo documentation for the Armosphera A1 product family.
 | [`Armosphera/A1-Localization-RU`](../A1-Localization-RU) | Engine |
 | [`Armosphera/A1-Validator`](../A1-Validator) | Engine |
 | [`Armosphera/A1-AI-Core`](../A1-AI-Core) | Engine |
-| [`Armosphera/A1-Suite-Local-MAX`](../A1-Suite-Local-MAX) | Application |
+| [`Armosphera/A1-Suite-Local-MAX`](../A1-Suite-Local-MAX) | Application | **Active** |
+| [`Armosphera/A1-Suite-Local-ANT`](../A1-Suite-Local-ANT) | Application | **Frozen** (`ant-v0.1.0-frozen`) |
+| [`Armosphera/SBOS-A1-ERP`](../SBOS-A1-ERP) | Application | Public distribution |
 | [`Armosphera/A1-Suite-Local-ANT`](../A1-Suite-Local-ANT) | Application |
 | [`Armosphera/A1-AI-ERP-SBOS-MSTUDIO-sovereign`](../A1-AI-ERP-SBOS-MSTUDIO-sovereign) | Application |
 | [`Armosphera/SBOS-A1-ERP`](../SBOS-A1-ERP) | Application |
@@ -38,4 +40,17 @@ Cross-repo documentation for the Armosphera A1 product family.
 | [`Armosphera/A1-SMB-HH-HY-MAX`](../A1-SMB-HH-HY-MAX) | Application (mirror) |
 | [`Armosphera/a1-cross-link-sweep`](../a1-cross-link-sweep) | Tooling |
 
+
+
+## Product matrix (decided 2026-06-21)
+
+The A1 portfolio has three live ERP-suite repos with non-overlapping roles:
+
+| Repo | Role | Where new code lands |
+|---|---|---|
+| [`Armosphera/A1-Suite-Local-MAX`](../A1-Suite-Local-MAX) | **Active dev surface** — Turborepo monorepo, full agentic workflow stack (Phases 3-9), 11 Karpathy eval branches, Postgres adapter. | **New code lands here.** |
+| [`Armosphera/A1-Suite-Local-ANT`](../A1-Suite-Local-ANT) | **Frozen live** — v0.1.0 prototype-rooted implementation, 139/140 e2e tests, 2 Karpathy eval branches. Tagged `ant-v0.1.0-frozen`. | **Frozen.** Port e2e tests into MAX over time. |
+| [`Armosphera/SBOS-A1-ERP`](../SBOS-A1-ERP) | **Public open-core distribution** — receives Wave N code-flow from `A1-ERP-HY` (private R&D). Brand-neutral. | **Receives ports.** No direct dev here. |
+
+The full decision doc (overlap analysis, cutover path, rollout) lives at [`docs/PRODUCTS.md`](./docs/PRODUCTS.md).
 Owned by **Armosphera LLC**. Contact: ops@a1-suite.local.
