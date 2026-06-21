@@ -182,12 +182,13 @@ hygiene_ok=0
 hygiene_fail=0
 for repo in "${REPOS[@]}"; do
   for file in "${HYGIENE_FILES[@]}"; do
+    expected_name="${file##*/}"
     status=$(curl -s -H "$AUTH" "$API/repos/$ORG/$repo/contents/$file" | jq -r '.name // "MISSING"')
-    if [ "$status" != "$file" ]; then
-      fail "[hygiene] $repo: missing $file"
-      hygiene_fail=$((hygiene_fail + 1))
-    else
+    if [ "$status" = "$expected_name" ]; then
       hygiene_ok=$((hygiene_ok + 1))
+    else
+      fail "[hygiene] $repo: missing $file (got: $status)"
+      hygiene_fail=$((hygiene_fail + 1))
     fi
   done
 done
