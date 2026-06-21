@@ -398,3 +398,65 @@ Test passes locally. Future route changes that violate the pattern will fail the
 - `rbac-bridge.test.ts`: 15/15 passing
 - `rbac-bridge-middleware.test.ts`: 10/10 passing
 - `rbac-route-migration-audit.test.ts`: 30/30 passing
+
+
+## Wave 13 — 2026-06-21: Bridge observability + Karpathy eval + dev deploy config
+
+### Bridge middleware observability (new)
+
+`src/lib/rbac-bridge-metrics.ts` exposes Prometheus counters:
+
+| Metric | Labels | Description |
+|---|---|---|
+| `rbac_bridge_requests_total` | `outcome`, `permission` | Total requests (allowed/denied) |
+| `rbac_bridge_translation_total` | `hh_permission`, `max_permission` | Successful HH→MAX translations |
+| `rbac_bridge_legacy_fallback_total` | `permission` | HH code with no MAX mapping (fell back to legacy engine) |
+| `rbac_bridge_audit_failures_total` | `stage` | no_tenant / no_user / no_max_role / no_membership |
+
+HTTP server on `:9091/metrics` (when `RBR_METRICS_ENABLED=1`). Started automatically on first bridge import.
+
+### Dev deployment config (new)
+
+- `.env.example` — documents `RBR_ENABLED=0` (default), `RBR_METRICS_ENABLED=1`, `RBR_METRICS_PORT=9091`
+- `deploy/docker-compose.yml` — new `app` service example with `RBR_ENABLED=1`, ports `4100` (API) + `9091` (metrics)
+
+### HH Karpathy eval contract (new)
+
+`evals/karpathy/rbac-bridge.json` — 3 editable + 5 read-only files, 5 unit test files, 6 guardrails. The eval will fail if:
+- Route modules bypass `guard()` and call `requirePermission` directly
+- HH codes with MAX mappings don't go through rbac-bridge.ts
+- Unknown HH codes silently deny instead of falling back to legacy
+- Bridge mode doesn't emit metrics
+- Audit rows don't include the translated MAX permission code
+
+### Tests passing
+
+| Suite | Tests | Result |
+|---|---|---|
+| rbac-bridge.test.ts | 15 | ✅ |
+| rbac-bridge-middleware.test.ts | 10 | ✅ |
+| rbac-bridge-metrics.test.ts | 9 | ✅ |
+| rbac-route-migration-audit.test.ts | 30 | ✅ |
+
+### Integration test (DB-backed)
+
+`test/integration/rbac-bridge-live.test.ts` — 8 tests against live Postgres:
+- Owner role allow for `gl:post`
+- Operator role deny for `gl:post`
+- Admin/operator roles allow for `invoice:read`
+- NO_TENANT, NO_MAX_ROLE error paths
+- Legacy fallback when no MAX mapping
+- Audit trail writes `allowed` rows
+
+(Note: requires `DATABASE_URL` pointing to a working Postgres; will run in CI once the env is configured.)
+
+### tsc status
+
+- `tsc --noEmit` exit 0 (all migrated route files + bridge middleware + metrics + audit test)
+
+### Deployment readiness
+
+✅ `RBR_ENABLED=1` is now safe to flip in dev (defaults unchanged for prod)
+✅ Metrics scraping endpoint ready at :9091
+✅ Karpathy eval contract in place to catch regressions
+✅ Route migration audit (30 tests) prevents future routes from bypassing guard()
