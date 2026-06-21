@@ -11,6 +11,8 @@ Cross-repo documentation for the Armosphera A1 product family.
 | [docs/CONTRIBUTING.md](./docs/CONTRIBUTING.md) | How to file issues across the 9 repos. |
 | [docs/RELEASE-PROCESS.md](./docs/RELEASE-PROCESS.md) | How releases are cut (semver, cross-repo coordination). |
 | [docs/PRODUCTS.md](./docs/PRODUCTS.md) | Naming matrix: which repo is canonical for X. |
+| [docs/CROSS-REPO-COORDINATION.md](./docs/CROSS-REPO-COORDINATION.md) | 8 coordination recipes for cross-repo changes (Wave 6). |
+| [DUAL-LICENSE-PREP.md](./DUAL-LICENSE-PREP.md) | AGPL-3.0 + Commercial migration playbook (Wave 6). |
 
 ## Repo index
 
