@@ -184,9 +184,22 @@ Pattern: import route handlers directly + call with mock Request — no Next.js 
   - Per-contract: shallow clone at contract ref → `npm ci` if needed → run contract's eval command → upload log artifact → update step summary.
   - On any failure: opens/updates a labelled `karpathy-drift` issue with the failing contract's log.
 
+### ✅ Finance Close cockpit page (Phase 6 + Phase 7 UI)
+
+- `apps/shell/src/app/cockpit/finance-close/page.tsx` (350 LOC) on `karpathy/finance-close-cockpit` branch (both mirrors):
+  - **Period header** — periodKey + label + status badge + completion progress bar.
+  - **Checklist walkthrough** — 9 default items (bank recon, AR/AP aging, accruals, depreciation, FX reval, proposals review, CFO snap, period close). Mark done / skipped (skip requires non-empty note per ADR §D7 audit trail).
+  - **Proposal review panel** — 3 default proposals (utility accrual, FX reval, WIP→COGS reclass). Each shows journal lines + balance check. Approve/Reject buttons gated by `previewed && balanced`.
+  - **Workflow run mini-timeline** — Preview button (disabled while in flight per ADR §D7), Confirm button (enabled only after preview + balanced), audit message stream.
+- `apps/shell/src/components/cockpit/FinanceCloseClient.tsx` — extracted client component.
+- `apps/shell/src/components/cockpit/CockpitNav.tsx` — added Finance Close as the 6th cockpit section (after Agents, before Audit).
+- `apps/shell/src/lib/cockpit/fixtures.ts` — added `CLOSE_PERIODS`, `CLOSE_CHECKLIST`, `CLOSE_PROPOSALS` data + types (3 periods, 9 checklist items, 3 proposals).
+- `evals/karpathy/finance-close-cockpit.{json,tsv}` — contract enforcing the 7 invariants above.
+
+Production wiring: replace the page's `setTimeout`-based mock workflow calls with real `POST /api/erp/workflow/{preview,confirm}` + `PUT /api/erp/finance-close/checklist`.
+
 ### Still pending
 
-- **Cockpit UI** for Phase 6 (Phase 6 → UX: agent workbench, approval card, audit drawer).
 - **HH module-by-module refactor** (`gl/`, `invoices/`, `bills/`, `payroll/`, `tax/`, `auth/`, `audit/` route middleware) — sequential, per module.
 - **MAX vs ANT vs SBOS-A1-ERP product matrix decision** (still open).
 
@@ -201,6 +214,7 @@ Pattern: import route handlers directly + call with mock Request — no Next.js 
 | `karpathy/finance-close` | `A1-Suite-Local-MAX` | Phase 6 Finance Close Assistant + route wiring | ✅ successMetricValue=0 |
 | `karpathy/hh-rbac-migration` | `A1-SMB-HH-HY-MAX` | HH 10-role → MAX 5-role RBAC schema migration | ✅ additive migration, idempotent seed |
 | `karpathy/postgres-run-store` | `A1-Suite-Local-MAX` | Phase 4 PostgresWorkflowRunStore adapter (Prisma + adapter-pg) | ✅ contract + oracle-parity test |
+| `karpathy/finance-close-cockpit` | `A1-Suite-Local-MAX` | Phase 6+7 Finance Close cockpit page (Period + Checklist + Proposal + Workflow timeline) | ✅ 7 invariants, 6th cockpit section |
 | `karpathy/rbac-contract` | `A1-ERP-HY` | RBAC permission matrix + auditor coverage | (pre-existing) |
 | `karpathy/egress-policy-contract-default` | `A1-Suite-Local-ANT` | Egress deny-by-default | (pre-existing) |
 | `karpathy/egress-policy-contract-public` | `A1-Suite-Local-ANT` | Egress public allowlist | (pre-existing) |
