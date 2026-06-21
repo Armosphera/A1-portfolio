@@ -1,0 +1,84 @@
+{
+  "$schema": "https://json-schema.org/draft-07/schema",
+  "$comment": "Canonical list of all armosphera repos. Used by scripts/check-portfolio-drift.js to validate README.md / LICENSING.md / ARCHITECTURE.md / SECURITY.md. Update this file when adding or deprecating a repo. The drift check compares against this file rather than the GitHub API for the full repo list (so private repos are also validated, even when the CI GITHUB_TOKEN can't see them).",
+
+  "repos": [
+    {
+      "name": "autoresearch-sboss",
+      "visibility": "public",
+      "layer": "Reference",
+      "license": "MIT",
+      "spdx": "MIT"
+    },
+    {
+      "name": "A1-Localization-AM",
+      "visibility": "public",
+      "layer": "Engine",
+      "license": "Proprietary",
+      "spdx": "LicenseRef-Armosphera-Proprietary"
+    },
+    {
+      "name": "A1-Localization-RU",
+      "visibility": "public",
+      "layer": "Engine",
+      "license": "Proprietary",
+      "spdx": "LicenseRef-Armosphera-Proprietary"
+    },
+    {
+      "name": "A1-Validator",
+      "visibility": "public",
+      "layer": "Engine",
+      "license": "Proprietary",
+      "spdx": "LicenseRef-Armosphera-Proprietary"
+    },
+    {
+      "name": "A1-AI-Core",
+      "visibility": "public",
+      "layer": "Engine",
+      "license": "Proprietary",
+      "spdx": "LicenseRef-Armosphera-Proprietary"
+    },
+    {
+      "name": "A1-Suite-Local-MAX",
+      "visibility": "private",
+      "layer": "Application",
+      "license": "Proprietary",
+      "spdx": "LicenseRef-Armosphera-Proprietary"
+    },
+    {
+      "name": "A1-Suite-Local-ANT",
+      "visibility": "private",
+      "layer": "Application",
+      "license": "Proprietary",
+      "spdx": "LicenseRef-Armosphera-Proprietary"
+    },
+    {
+      "name": "A1-AI-ERP-SBOS-MSTUDIO-sovereign",
+      "visibility": "private",
+      "layer": "Application",
+      "license": "Proprietary",
+      "spdx": "LicenseRef-Armosphera-Proprietary"
+    },
+    {
+      "name": "SBOS-A1-ERP",
+      "visibility": "private",
+      "layer": "Application",
+      "license": "Proprietary",
+      "spdx": "LicenseRef-Armosphera-Proprietary"
+    },
+    {
+      "name": "A1-portfolio",
+      "visibility": "public",
+      "layer": "Meta",
+      "license": "Proprietary",
+      "spdx": "LicenseRef-Armosphera-Proprietary"
+    },
+    {
+      "name": "a1-cross-link-sweep",
+      "visibility": "public",
+      "layer": "Tooling",
+      "license": "Proprietary",
+      "spdx": "LicenseRef-Armosphera-Proprietary"
+    }
+  ]
+}
