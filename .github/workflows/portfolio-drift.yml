@@ -29,9 +29,6 @@ jobs:
       # No npm install needed — check-portfolio-drift.js is zero-dep
       # (uses fetch + child_process to talk to GitHub API via `gh`).
 
-      - name: Authenticate with GitHub
-        run: echo "GITHUB_TOKEN set: $([ -n "$GITHUB_TOKEN" ] && echo yes || echo no)"
-
       - name: Run drift check
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
