@@ -1,0 +1,18 @@
+version: 2
+updates:
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "06:00"
+    labels:
+      - "dependencies"
+      - "github-actions"
+    commit-message:
+      prefix: "deps(ci)"
+      include: "scope"
+
+  # Note: no npm/pip ecosystem here — this is a docs-only repo.
+  # scripts/check-portfolio-drift.js uses only Node built-ins + fetch.
+  # If a future tool adds npm deps, add a "npm" block here.
