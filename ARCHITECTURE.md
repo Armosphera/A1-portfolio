@@ -96,6 +96,11 @@ Each engine repo ships an `INTEGRATION.md` describing the vendor procedure. Apps
 
 ## Operational checks (re-run anytime)
 
+> **TL;DR — run the canonical script:** [`scripts/health.sh`](./scripts/health.sh)
+> It bundles all 4 checks below into one bash invocation, with colour output and proper exit codes.
+> Wired as a weekly GitHub Actions cron — see [`.github/workflows/health.yml`](./.github/workflows/health.yml).
+> On drift it auto-opens a labelled issue with the failing log.
+
 The following one-liners verify portfolio invariants against the live GitHub state.
 Run them after any large sweep, branch protection change, or org rename.
 They assume you have a token with `repo` scope on the armosphera account:
