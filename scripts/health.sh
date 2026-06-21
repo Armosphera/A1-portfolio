@@ -50,16 +50,20 @@ REPOS=(
   A1-Localization-RU
   A1-Suite-Local-ANT
   A1-Suite-Local-MAX
+  A1-Platform-MAX
   A1-AI-ERP-SBOS-MSTUDIO-sovereign
   A1-Validator
   SBOS-A1-ERP
+  A1-SMB-HH-HY-MAX
+  A1-SMB-CRM-HY-MAX
+  A1-SMB-CRM-HY-MAX-web
   a1-cross-link-sweep
   autoresearch-sboss
 )
 
-EXPECTED_TOTAL=11
-EXPECTED_PUBLIC=7
-EXPECTED_PRIVATE=4
+EXPECTED_TOTAL=14
+EXPECTED_PUBLIC=8
+EXPECTED_PRIVATE=6
 
 errors=0
 warnings=0
