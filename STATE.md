@@ -8,15 +8,16 @@
 
 ## TL;DR — What we shipped
 
-In this session (≈ 1 working day), across **3 waves**, we delivered:
+Across 4 waves in this session, we delivered:
 
 - **Wave 1 (AGENTS.md onboarding):** 8 repos got `AGENTS.md`. ANT's 1-line stub expanded to 14-rule agent contract.
 - **Wave 2 (orchestration scaffolding):** 9 repos got `program.md` + `.orchestration/<roadmap>.md`. A1-Validator and sovereign got `scripts/spawn-worker.sh` (verified by end-to-end smoke-test).
 - **Wave 3 (first execution + releases + Issues):** 7 GitHub Releases cut (Wave 1+2 milestones). 6 sample Issues opened with full agent-ready bodies, ready to be picked up by Claude Code / Codex / MiniMax / Mavis / Hermes.
+- **Wave 4 (strategic gaps):** 3 TODO docs in `A1-portfolio` (CONTRIBUTING / RELEASE-PROCESS / PRODUCTS). First Karpathy eval lane `di-contract-frozen` in `A1-AI-Core` (6/6 PASS on real `index.js`, AST-based). A1-Validator license drift marked fixed in LICENSING.md.
 
-**Total commits this session:** ~30+ (8 AGENTS.md + 9 program.md + 8 roadmap.md + 3 spawn-worker.sh + 1 bugfix + 3 helper files).
+**Total commits this session:** ~35+ (Wave 1+2+3+4).
 **Total GitHub Releases this session:** 14 (7 initial + 7 Wave 1+2 milestones).
-**Total Issues opened:** 6 sample AI-coder tasks.
+**Total Issues opened:** 6 sample AI-coder tasks. **2 closed** by Wave 4 (portfolio #1, A1-AI-Core #1).
 
 ---
 
@@ -91,6 +92,34 @@ Documented as future work, NOT regressions from this session:
 
 ---
 
+## Wave 4 artifacts created
+
+- **3 docs in `A1-portfolio/docs/`:**
+  - `CONTRIBUTING.md` — repo index for filing issues
+  - `RELEASE-PROCESS.md` — versioning + cross-repo release flow
+  - `PRODUCTS.md` — naming matrix: "Which repo is canonical for X?"
+  - `README.md` updated with links to the 3 new docs + STATE.md
+
+- **`di-contract-frozen` Karpathy eval lane in `A1-AI-Core`:**
+  - `evals/di-contract-frozen/program.md` — full rationale + recovery procedure
+  - `evals/di-contract-frozen/check.js` — AST-based check via acorn (zero runtime impact)
+  - `evals/di-contract-frozen/run.sh` — bash wrapper that installs acorn if missing
+  - `evals/di-contract-frozen/lane.json` — Karpathy lane metadata
+  - `package.json` devDep: `acorn@^8.12.0`. Script: `karpathy:run:di-contract`.
+  - **Verified end-to-end:** 6/6 PASS on the current `index.js`.
+
+- **License drift fix documented:**
+  - `A1-portfolio/LICENSING.md` updated: A1-Validator row now says "Pyproject metadata matches" instead of "drift, will be fixed".
+  - (The drift was already resolved upstream by a previous commit; this PR just removes the stale note.)
+
+- **2 bugs found + fixed in Wave 4:**
+  - `di-contract-frozen/check.js` — AST traversal bug. `prop.value.value.start` was wrong; for shorthand fields `prop.value` is `Identifier`, not `AssignmentPattern`. Fixed to use `prop.value.right.start/end` after the AssignmentPattern check.
+  - `di-contract-frozen/check.js` — `EXPECTED_EXPORTS` listed things like `FALLBACK_MODELS`, `MODEL_KEYS`, `MODULES`, `ASPECTS` as top-level exports. Actual `index.js` has them as flat function exports from `product-research` module. Updated to match the 18 actual flat exports.
+
+- **2 Issues closed by Wave 4 work:**
+  - `A1-portfolio#1` — closed by adding CONTRIBUTING/RELEASE-PROCESS/PRODUCTS docs.
+  - `A1-AI-Core#1` — closed by adding the `di-contract-frozen` eval lane.
+
 ## Wave 3 artifacts created
 
 - **7 GitHub Releases** with Wave 1+2 notes:
@@ -117,16 +146,18 @@ Documented as future work, NOT regressions from this session:
 
 ---
 
-## Open Wave 4 candidates (NOT done in this session)
+## Open Wave 5+ candidates (NOT done in this session)
 
 These were identified but not executed:
 
 1. **Run autoresearch-sboss overnight** with `program.md` — 500 experiments, results.tsv deltas. Requires local machine + Claude Code / Codex / MiniMax.
 2. **Execute sovereign Plan 6** via `scripts/spawn-worker.sh sboss-plan6 w<N>-<name>` — first real wave after Wave 2 scaffolding.
 3. **Port all 23 validators** in `A1-Validator` queue — Issue #1 starts with hhvh, the other 22 follow.
-4. **Add the 3 TODO docs** to `A1-portfolio` (CONTRIBUTING.md, RELEASE-PROCESS.md, PRODUCTS.md) — Issue #1 in portfolio.
-5. **Investigate ANT CI failure** — pre-existing, separate from Wave work.
-6. **AGPL-3.0 migration** for engines — 2026 H2 roadmap, needs operator decision.
+4. **Investigate ANT CI failure** — pre-existing, separate from Wave work.
+5. **AGPL-3.0 migration** for engines — 2026 H2 roadmap, needs operator decision.
+6. **Wire `di-contract-frozen` lane into CI** — `A1-AI-Core` CI workflow should run `node evals/di-contract-frozen/check.js` on every push/PR. Same pattern for the 2 other planned lanes (`fallback-models-stability`, `safeFetch-required`).
+7. **Drift-detection CI for `A1-portfolio`** — programmatically check that README / LICENSING.md / ARCHITECTURE.md / SECURITY.md match the actual org repo list, license matrix, layer cake, supported versions. This was on `doc-drift-tasks.md` but didn't make Wave 4.
+8. **Cut Wave 4 release** for `A1-AI-Core` v0.3.0 with the new eval lane in notes.
 
 ---
 
