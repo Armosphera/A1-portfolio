@@ -14,6 +14,7 @@ Cross-repo documentation for the Armosphera A1 product family.
 | [docs/CROSS-REPO-COORDINATION.md](./docs/CROSS-REPO-COORDINATION.md) | 8 coordination recipes for cross-repo changes (Wave 6). |
 | [docs/REPO-TEMPLATE.md](./docs/REPO-TEMPLATE.md) | 9-step recipe for adding new A1 repos (Wave 7). |
 | [DUAL-LICENSE-PREP.md](./DUAL-LICENSE-PREP.md) | AGPL-3.0 + Commercial migration playbook (Wave 6). |
+| [CONTRIBUTORS.md](./CONTRIBUTORS.md) | Meta-level contributor list (Wave 7). |
 
 ## Repo index
 
