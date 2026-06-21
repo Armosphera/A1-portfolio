@@ -235,7 +235,7 @@ function checkArchitecture(expectedRepos) {
 
 // ─── Check 4: SECURITY.md supported versions drift ───────────────────────────
 
-async function checkSecurity(actualRepos) {
+async function checkSecurity(expectedRepos) {
   // SECURITY.md may have a table or a list of supported versions per repo.
   // We accept either format. If the doc doesn't mention versions at all,
   // skip this check.
@@ -263,12 +263,52 @@ async function checkSecurity(actualRepos) {
     securityNames.add(m[1]);
   }
 
-  const actualNames = new Set(actualRepos.map((r) => r.name));
+  const actualNames = new Set(expectedRepos.map((r) => r.name));
   const inSecNotActual = [...securityNames].filter((n) => !actualNames.has(n));
   if (inSecNotActual.length > 0) {
     fail(`SECURITY.md mentions repos that don't exist: ${inSecNotActual.join(", ")}`);
   } else if (securityNames.size > 0) {
     pass(`SECURITY.md mentions ${securityNames.size} repos, all real`);
+  }
+}
+
+// ─── Check 5: Dependabot configured for code-bearing repos ──────────────────
+
+async function checkDependabot(expectedRepos) {
+  // Code-bearing repos (not pure docs / tooling) should have Dependabot
+  // configured. A1-portfolio itself is docs-only, so it's exempt.
+  //
+  // We check via the GitHub API for .github/dependabot.yml (the modern config)
+  // OR .github/workflows/dependabot.yml (the legacy workflow).
+  //
+  // This is a best-effort check: requires GITHUB_TOKEN with read access.
+
+  // Repos we expect to have Dependabot. (Pure docs / tooling exempt.)
+  const codeRepos = expectedRepos.filter((r) =>
+    r.layer !== "Meta" && r.layer !== "Tooling"
+  );
+
+  for (const repo of codeRepos) {
+    let hasDependabot = false;
+
+    try {
+      const dep = await ghFetch(`/repos/Armosphera/${repo.name}/contents/.github/dependabot.yml`);
+      if (dep && dep.name) hasDependabot = true;
+    } catch (e) {
+      // Try the legacy path
+      try {
+        const wf = await ghFetch(`/repos/Armosphera/${repo.name}/contents/.github/workflows/dependabot.yml`);
+        if (wf && wf.name) hasDependabot = true;
+      } catch (e2) {
+        // Neither found
+      }
+    }
+
+    if (hasDependabot) {
+      pass(`Dependabot configured for ${repo.name}`);
+    } else {
+      fail(`${repo.name} is missing Dependabot config (.github/dependabot.yml or .github/workflows/dependabot.yml)`);
+    }
   }
 }
 
@@ -324,6 +364,8 @@ async function main() {
   checkArchitecture(expectedRepos);
   console.log();
   await checkSecurity(expectedRepos);
+  console.log();
+  await checkDependabot(expectedRepos);
   console.log();
 
   if (failures > 0) {

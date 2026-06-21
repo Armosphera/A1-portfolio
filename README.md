@@ -30,6 +30,10 @@ Cross-repo documentation for the Armosphera A1 product family.
 | [`Armosphera/A1-AI-ERP-SBOS-MSTUDIO-sovereign`](../A1-AI-ERP-SBOS-MSTUDIO-sovereign) | Application |
 | [`Armosphera/SBOS-A1-ERP`](../SBOS-A1-ERP) | Application |
 | [`Armosphera/A1-portfolio`](../A1-portfolio) | Meta-docs (this repo) |
+| [`Armosphera/A1-Platform-MAX`](../A1-Platform-MAX) | Application (mirror) |
+| [`Armosphera/A1-SMB-CRM-HY-MAX`](../A1-SMB-CRM-HY-MAX) | Application (mirror) |
+| [`Armosphera/A1-SMB-CRM-HY-MAX-web`](../A1-SMB-CRM-HY-MAX-web) | Application (web) |
+| [`Armosphera/A1-SMB-HH-HY-MAX`](../A1-SMB-HH-HY-MAX) | Application (mirror) |
 | [`Armosphera/a1-cross-link-sweep`](../a1-cross-link-sweep) | Tooling |
 
 Owned by **Armosphera LLC**. Contact: ops@a1-suite.local.
