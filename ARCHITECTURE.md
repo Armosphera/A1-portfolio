@@ -125,11 +125,33 @@ Each engine repo ships an `INTEGRATION.md` describing the vendor procedure. Apps
 - Add Next.js tests under `apps/inventory/src/app/api/erp/workflow/route.test.ts`.
 - Add Karpathy eval branch for the **agent layer** (Phase 5).
 
-### Still pending (Phases 5-6)
+### ✅ Phase 5 — agent layer: ROUTE WIRED
+
+- `apps/inventory/src/app/api/erp/agent/route.ts` exposes 4 endpoints:
+  - `POST /api/erp/agent/invoke` — run agent with read-only inputs → returns `AgentRunOutput.proposedActions` (ADR §D6.2: never writes).
+  - `PUT  /api/erp/agent/eval` — run agent's `evalSuite` against mock LLM (no live model call).
+  - `GET  /api/erp/agent/registry` — list registered agents (metadata only, systemPrompt omitted to avoid IP leak).
+  - `HEAD /api/erp/agent/cost` — read cost ledger for the org.
+- Uses `createDefaultAgentRegistry()` singleton seeded at boot. Production wiring replaces with tenant-scoped registry loaded from `packages/erp/src/agent/bootstrap.ts`.
+- All writes go through `withIdempotency()` (Phase 3 contract).
+- Branch: `karpathy/agent-layer` on both `SamStep74/A1-Suite-Local-MAX` and `Armosphera/A1-Suite-Local-MAX`.
+
+### ✅ Phase 6 — Finance Close Assistant: ROUTE WIRED
+
+- `apps/inventory/src/app/api/erp/finance-close/route.ts` exposes 4 endpoints:
+  - `GET  /api/erp/finance-close/checklist?period=...` — get close checklist snapshot.
+  - `PUT  /api/erp/finance-close/checklist` — mark item status (done|skipped|in_progress); `skipped` requires note.
+  - `POST /api/erp/finance-close/proposal` — save journal proposal (NEVER posts — that's the workflow's job).
+  - `HEAD /api/erp/finance-close/periods` — list periods with state.
+- Uses `createCloseStore()` singleton seeded with `defaultCloseChecklist()`. The proposal → ledger flow goes through `/api/erp/workflow/preview` + `/confirm`.
+- Branch: `karpathy/finance-close` on both mirrors.
+
+### Still pending
 
 - **HH migration** to MAX RBAC contract (`A1-SMB-HH-HY-MAX/docs/rbac-and-ux-migration.md`).
-- **Phase 5 — agent layer** (`packages/erp/src/agent/`): registry, model-adapter, policy, retrieval, structured-output all present; needs Fastify/Next.js route + tool-perm gates wired.
-- **Phase 6 — Finance Close Assistant** (`packages/erp/src/finance-close/`): checklist, store, types present; needs cockpit UI in `apps/inventory/src/app/finance-close/`.
+- **Postgres adapters** for workflow run-store + audit-sink + agent registry (Phase 4 → production).
+- **Cockpit UI** for Phase 6 (Phase 6 → UX).
+- **Next.js route tests** at `apps/inventory/src/app/api/erp/{workflow,agent,finance-close}/route.test.ts`.
 
 ### Karpathy eval branches (5 live, 1 new this session)
 
@@ -138,6 +160,8 @@ Each engine repo ships an `INTEGRATION.md` describing the vendor procedure. Apps
 | `karpathy/invoice-extractor-contract` | `autoresearch-sboss` | Invoice field extraction (5 fields × 20 items) | ✅ 100/100 |
 | `karpathy/erp-idempotency` | `A1-Suite-Local-MAX` | Phase 3 idempotency wrapper | ✅ successMetricValue=0 |
 | `karpathy/workflow-runtime` | `A1-Suite-Local-MAX` | Phase 4 workflow runtime + route wiring | ✅ successMetricValue=0 |
+| `karpathy/agent-layer` | `A1-Suite-Local-MAX` | Phase 5 governed AI agent layer + route wiring | ✅ successMetricValue=0 |
+| `karpathy/finance-close` | `A1-Suite-Local-MAX` | Phase 6 Finance Close Assistant + route wiring | ✅ successMetricValue=0 |
 | `karpathy/rbac-contract` | `A1-ERP-HY` | RBAC permission matrix + auditor coverage | (pre-existing) |
 | `karpathy/egress-policy-contract-default` | `A1-Suite-Local-ANT` | Egress deny-by-default | (pre-existing) |
 | `karpathy/egress-policy-contract-public` | `A1-Suite-Local-ANT` | Egress public allowlist | (pre-existing) |
