@@ -12,7 +12,7 @@ This document is the canonical source of truth for licensing across the A1 produ
 |---|---|---|---|---|
 | [`SamStep74/autoresearch-sboss`](../autoresearch-sboss) | public | MIT | `MIT` | The only MIT-licensed repo. Distributed reference implementation. |
 | [`Armosphera/autoresearch-sboss`](../autoresearch-sboss) | public | MIT | `MIT` | Mirror / canonical home — same content as SamStep74. |
-| [`Armosphera/A1-Validator`](../A1-Validator) | public | Proprietary | `LicenseRef-Armosphera-Proprietary` | Per `LICENSE` file. Pyproject metadata says MIT — **drift, will be fixed in next release.** |
+| [`Armosphera/A1-Validator`](../A1-Validator) | public | Proprietary | `LicenseRef-Armosphera-Proprietary` | Per `LICENSE` file. Pyproject metadata matches. |
 | [`Armosphera/A1-Localization-AM`](../A1-Localization-AM) | public | Proprietary | `LicenseRef-Armosphera-Proprietary` | Fiscal engines (ՀՎՀՀ, AMD, 623-account chart, VAT, payroll). |
 | [`Armosphera/A1-Localization-RU`](../A1-Localization-RU) | public | Proprietary | `LicenseRef-Armosphera-Proprietary` | Fiscal engines (ИНН, ₽, НДС, НДФЛ, УПД). |
 | [`Armosphera/A1-AI-Core`](../A1-AI-Core) | public | Proprietary | `LicenseRef-Armosphera-Proprietary` | Shared AI provider core. |
