@@ -509,3 +509,94 @@ curl http://localhost:9091/metrics | grep rbac_bridge
 ```
 
 Expected allow/deny distribution should match legacy within ±5%. If dev shows deviation > 5% over 24h, rollback with `RBR_ENABLED=0`.
+
+
+## Wave 15 — 2026-06-22: HH-HY bridge pilot on macstudio (autonomous night run)
+
+### Context
+
+Previous session ended with HH-HY bridge module live on macstudio (PID 36719, RBR_ENABLED=1, metrics on :9091). Sam asked to complete 6 items autonomously while he sleeps until 9am.
+
+### Steps completed
+
+**Step 1: Removed BRIDGE_TRACE debug log from server.js**
+- Trace was left in production code from earlier debugging
+- Verified: BRIDGE_TRACE no longer in source
+
+**Step 2: Wrapped viewer-only check (line 342) with bridgeRequireEditor()**
+- New function: bridgeRequireEditor(role, method)
+- Emits "editor" metrics on every API request (GET/POST/PUT/DELETE)
+- Legacy fallback preserves original inline check
+- Live verification: 5 editor checks recorded for 5 tested routes
+
+**Step 3: Audited all 7 requireOwner callsites**
+- Grep confirms: requireOwner(role) = 0 calls (function declaration + legacy fallback only)
+- bridgeRequireOwner(role) = 7 calls
+- All owner-only paths now emit metrics
+
+**Step 4: Baseline equivalence verified**
+- Tested 5 routes: GET /api/me/companies, GET/POST/PUT/DELETE /api/members
+- Legacy mode (RBR_ENABLED unset): [200, 200, 201, 400, 404]
+- Bridge mode (RBR_ENABLED=1):   [200, 200, 201, 400, 404]
+- IDENTICAL — safe to proceed with broader pilot
+- Bridge additionally recorded: 5 editor + 2 owner checks
+- Saved to BRIDGE-BASELINE.json
+
+**Step 5: Karpathy evals cron for HH-HY**
+- Created .github/workflows/karpathy-evals.yml
+- Schedule: every 6h, opens issue on regression
+- Tests: node:test (rbac-bridge.test.js) + bridge integration check
+- BLOCKED: OAuth token doesn't have `workflow` scope
+- Workaround in ops/pending-workflow-push/README.md: 3 options (web UI / PAT / gh refresh)
+
+**Step 6: Cross-check HH-HY vs MAX**
+- MAX codebase (A1-SMB-HH-HY-MAX): Postgres-based, 27 routes, permission codes, 8/8 integration tests
+- HH-HY codebase (SamStep74/A1-SMB-HH-HY): file-based, 1 wrapper, role-based, 16/16 unit tests
+- Both use RBR_ENABLED/RBR_METRICS_ENABLED/RBR_METRICS_PORT env vars
+- Both expose metrics on :9091 in Prometheus format
+- MAX has 7-step rollout plan documented in BRIDGE-CROSSCHECK.md
+- HH-HY pilot: day 1 of dev rollout — safe to monitor
+
+### Git history
+
+5 new commits pushed to SamStep74/A1-SMB-HH-HY branch codex/tube-terminology:
+
+```
+7ae2074 docs(ops): document pending Karpathy workflow push
+dda53a0 docs: add baseline equivalence results + MAX cross-check report
+c0248f0 feat(rbac): add bridgeRequireEditor + baseline verification
+ac810ea feat(rbac): add bridge middleware for HH-HY dev — metrics + role-based gating
+```
+
+### Portfolio updates
+
+- docs/BRIDGE-CROSSCHECK-HH-HY-vs-MAX.md — detailed comparison report
+
+### Final state
+
+- ✅ Server PID 49865 running with RBR_ENABLED=1
+- ✅ /health on :9091 returns `{"status":"ok","bridge_enabled":true}`
+- ✅ 16/16 tests passing (node:test)
+- ✅ 5 commits pushed to GitHub
+- ⚠️ Karpathy workflow cron: needs manual push (workflow scope)
+
+### What you (Sam) need to do when you wake up
+
+1. Push the Karpathy workflow (1 minute via web UI):
+   - Go to https://github.com/SamStep74/A1-SMB-HH-HY/actions/new
+   - Click "set up a workflow yourself"
+   - Paste contents of `ops/pending-workflow-push/karpathy-evals.yml`
+   - Save as `.github/workflows/karpathy-evals.yml`
+
+2. Verify metrics endpoint is still alive:
+   ```
+   curl http://localhost:9091/health
+   curl http://localhost:9091/metrics | grep rbac_bridge
+   ```
+
+3. Optional: refresh gh auth to get workflow scope:
+   ```
+   gh auth refresh --scopes workflow
+   ```
+
+4. Continue 24h monitoring of /metrics on dev.
