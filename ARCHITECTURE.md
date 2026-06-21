@@ -91,8 +91,134 @@ Each engine repo ships an `INTEGRATION.md` describing the vendor procedure. Apps
 - **License drift on `A1-Validator`:** pyproject.toml updated (MIT → Armosphera Proprietary) to match the new `LICENSE` file.
 - **A1-AI-Core reachability:** mirror created at `Armosphera/A1-AI-Core` (HEAD `f917e8a`, identical to `SamStep74/A1-AI-Core`). All downstream `package.json` references updated.
 - **Default branch on `A1-Validator`:** fast-forwarded from `wip/bootstrap-and-port` to `main`.
-- **Dependabot:** enabled across all 9 repos (npm + pip, weekly, monday 06:00). Vulnerability alerts + automated security fixes turned on.
-- **`SECURITY.md`:** installed in all 9 repos, links to the portfolio-wide policy in `A1-portfolio`.
+- **Dependabot:** enabled across all 10 repos (npm + pip, weekly, monday 06:00). Vulnerability alerts + automated security fixes turned on. **Includes `A1-AI-Core` mirror**.
+- **`SECURITY.md`:** installed in all 10 repos, links to the portfolio-wide policy in `A1-portfolio`.
+
+## Operational checks (re-run anytime)
+
+The following one-liners verify portfolio invariants against the live GitHub state.
+Run them after any large sweep, branch protection change, or org rename.
+They assume you have a token with `repo` scope on the armosphera account:
+
+```bash
+TOKEN=*** auth token --user Armosphera)
+AUTH="Authorization: token $TOKEN"
+```
+
+### 1. Repo count + visibility split
+
+```bash
+curl -s -H "$AUTH" "https://api.github.com/user/repos?per_page=100&affiliation=owner" \
+  | jq '[.[] | select(.fork==false and .archived==false)] \
+       | {total: length, \
+          public:  [.[] | select(.private==false)] | length, \
+          private: [.[] | select(.private==true)]  | length}'
+```
+
+Expected: `{ "total": 10, "public": 6, "private": 4 }`.
+
+### 2. LICENSE present in every repo
+
+```bash
+for r in A1-AI-Core A1-Localization-AM A1-Localization-RU A1-Suite-Local-ANT \
+         A1-Suite-Local-MAX A1-AI-ERP-SBOS-MSTUDIO-sovereign \
+         A1-Validator SBOS-A1-ERP autoresearch-sboss; do
+  status=$(curl -s -H "$AUTH" "https://api.github.com/repos/Armosphera/$r/contents/LICENSE" \
+           | jq -r '.name // "MISSING"')
+  printf "%-45s %s\n" "$r" "$status"
+done
+```
+
+Expected: every line ends in `LICENSE`.
+
+### 3. 22-file cross-account sweep — all program.md files clean
+
+```bash
+for d in hhvh vat-return vat-return-form payroll-am chart-of-accounts-am \
+         phone-am regions-am einvoice-am ru-identifiers phone-ru \
+         ru-einvoice payroll-ru regions-ru chart-of-accounts-ru vat-ru \
+         model-policy chat-client settings-store model-catalog \
+         supplemental-sources open-notebook product-research; do
+  count=$(curl -s -H "$AUTH" \
+    "https://api.github.com/repos/Armosphera/autoresearch-sboss/contents/examples/$d/program.md" \
+    | jq -r '.content // ""' | base64 -d 2>/dev/null \
+    | grep -c "SamStep74\|samstep74")
+  printf "%-25s %s\n" "$d" "$count"
+done
+```
+
+Expected: all 22 lines show `0`. The Karpathy-loop `examples/cross-link-sweep/eval.py`
+is the canonical version of this check — it also computes the 0-22 score and exits 0 on full pass.
+
+### 4. Dependabot + SECURITY.md + vulnerability-alerts coverage
+
+```bash
+for r in A1-AI-Core A1-Localization-AM A1-Localization-RU A1-Suite-Local-ANT \
+         A1-Suite-Local-MAX A1-AI-ERP-SBOS-MSTUDIO-sovereign \
+         A1-Validator SBOS-A1-ERP autoresearch-sboss; do
+  dep=$(curl -s -H "$AUTH" "https://api.github.com/repos/Armosphera/$r/contents/.github/dependabot.yml" | jq -r '.name // "MISSING"')
+  sec=$(curl -s -H "$AUTH" "https://api.github.com/repos/Armosphera/$r/contents/.github/SECURITY.md"   | jq -r '.name // "MISSING"')
+  printf "%-45s dep=%-15s sec=%s\n" "$r" "$dep" "$sec"
+done
+```
+
+Expected: every line ends in `dep=dependabot.yml  sec=SECURITY.md`.
+
+### 5. Re-run the Karpathy autoresearch loop in-place
+
+```bash
+git clone https://github.com/Armosphera/autoresearch-sboss.git /tmp/ar
+cd /tmp/ar/examples/cross-link-sweep
+python3 eval.py        # prints score: 22 / 22 on a clean main
+# To re-run a sweep:
+python3 workflow.py    # commits any drift back to Armosphera mirror
+```
+
+Expected: `score: 22 / 22 | elapsed: ~10s`. Exit code 0 = portfolio invariant holds.
+
+### 6. One-shot portfolio health (chained)
+
+```bash
+#!/usr/bin/env bash
+# A1 portfolio health check — exits non-zero if any invariant fails.
+set -e
+TOKEN=*** auth token --user Armosphera)
+H_A="Authorization: token $TOKEN"
+fail() { echo "FAIL: $*" >&2; exit 1; }
+
+# 1) Repo count
+n=$(curl -s -H "$H_A" "https://api.github.com/user/repos?per_page=100&affiliation=owner" \
+    | jq '[.[] | select(.fork==false and .archived==false)] | length')
+[ "$n" -eq 10 ] || fail "expected 10 repos, got $n"
+
+# 2) LICENSE in all 10
+for r in A1-AI-Core A1-Localization-AM A1-Localization-RU A1-Suite-Local-ANT \
+         A1-Suite-Local-MAX A1-AI-ERP-SBOS-MSTUDIO-sovereign \
+         A1-Validator SBOS-A1-ERP autoresearch-sboss A1-portfolio; do
+  s=$(curl -s -H "$H_A" "https://api.github.com/repos/Armosphera/$r/contents/LICENSE" | jq -r '.name // "MISSING"')
+  [ "$s" = "LICENSE" ] || fail "$r missing LICENSE"
+done
+
+# 3) 22/22 sweep
+drift=0
+for d in hhvh vat-return vat-return-form payroll-am chart-of-accounts-am \
+         phone-am regions-am einvoice-am ru-identifiers phone-ru \
+         ru-einvoice payroll-ru regions-ru chart-of-accounts-ru vat-ru \
+         model-policy chat-client settings-store model-catalog \
+         supplemental-sources open-notebook product-research; do
+  c=$(curl -s -H "$H_A" \
+       "https://api.github.com/repos/Armosphera/autoresearch-sboss/contents/examples/$d/program.md" \
+       | jq -r '.content // ""' | base64 -d 2>/dev/null \
+       | grep -c "SamStep74\|samstep74")
+  drift=$((drift + c))
+done
+[ "$drift" -eq 0 ] || fail "cross-link sweep: $drift SamStep74 refs remaining"
+
+echo "OK — portfolio invariants hold (10 repos, 10 LICENSE, 22/22 sweep clean)"
+```
+
+Wire this into a GitHub Actions cron (`schedule: weekly`) under `Armosphera/A1-portfolio/.github/workflows/health.yml`
+for automated monitoring.
 
 ## Open portfolio questions (need owner decisions)
 
