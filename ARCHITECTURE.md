@@ -102,11 +102,87 @@ Each engine repo ships an `INTEGRATION.md` describing the vendor procedure. Apps
 - **Dependabot:** enabled across all 10 repos (npm + pip, weekly, monday 06:00). Vulnerability alerts + automated security fixes turned on.
 - **`SECURITY.md`:** installed in all 10 repos, links to the portfolio-wide policy in `A1-portfolio`.
 
-## What's unblocked now (next coding sprint, week 2 of the MAX roadmap)
+## What's unblocked now (week 2-3 of the MAX roadmap)
 
-- **Phase 3 — `withIdempotency()` wrappers** in `packages/erp/src/{vendor-bills,sales-orders,stock-moves,bom}/`. Prereq for Phase 4.
-- **HH migration** to MAX RBAC contract (`A1-SMB-HH-HY-MAX/docs/rbac-and-ux-migration.md`).
-- **Portfolio health check** for the 4 MAX repos (`A1-Platform-MAX`, `A1-SMB-HH-HY-MAX`, `A1-SMB-CRM-HY-MAX`, `A1-SMB-CRM-HY-MAX-web`) — once mirrored to `armosphera/`.
+### ✅ Phase 4 — workflow runtime: ROUTE WIRED
+
+- `apps/inventory/src/app/api/erp/workflow/route.ts` exposes 5 endpoints via Next.js:
+  - `POST /api/erp/workflow/parse` — validate YAML, returns `WorkflowDefinition` (422 on parse failure)
+  - `PUT  /api/erp/workflow/preview` — start preview-first run (ADR §D7 — no `effect: write` tools run)
+  - `PATCH /api/erp/workflow/confirm` — approve previewed run, transition to live. Per ADR §D2, the `x-actor-role`/`x-user-id` headers define the approver's principal; the run audit trail shows the human, not the agent.
+  - `DELETE /api/erp/workflow/cancel` — cancel queued/proposed run (throws `WORKFLOW_INVALID_STATE` for live/terminal runs).
+  - `GET /api/erp/workflow/runs?limit=N` — list runs for the org (capped 200).
+- Uses `InMemoryWorkflowRunStore` + `InMemoryAuditSink` + `ToolRegistry` singletons. Production wiring replaces with Postgres-backed adapters per ADR §D6.
+- All writes go through `withIdempotency()` (Phase 3 contract).
+- Branch: `karpathy/workflow-runtime` on both `SamStep74/A1-Suite-Local-MAX` and `Armosphera/A1-Suite-Local-MAX`.
+- Eval contract: `evals/karpathy/workflow-runtime.json` (successMetricValue=0).
+
+### Remaining (Phase 4 → production-ready)
+
+- Replace `InMemoryWorkflowRunStore` with Postgres-backed store.
+- Replace `InMemoryAuditSink` with `ErpAuditRepo.appendErpAuditEvent` from `packages/erp/src/repo.ts`.
+- Replace `ToolRegistry` with per-tenant scoped registry loaded from `packages/erp/src/agent/registry.ts`.
+- Add Next.js tests under `apps/inventory/src/app/api/erp/workflow/route.test.ts`.
+- Add Karpathy eval branch for the **agent layer** (Phase 5).
+
+### ✅ Phase 5 — agent layer: ROUTE WIRED
+
+- `apps/inventory/src/app/api/erp/agent/route.ts` exposes 4 endpoints:
+  - `POST /api/erp/agent/invoke` — run agent with read-only inputs → returns `AgentRunOutput.proposedActions` (ADR §D6.2: never writes).
+  - `PUT  /api/erp/agent/eval` — run agent's `evalSuite` against mock LLM (no live model call).
+  - `GET  /api/erp/agent/registry` — list registered agents (metadata only, systemPrompt omitted to avoid IP leak).
+  - `HEAD /api/erp/agent/cost` — read cost ledger for the org.
+- Uses `createDefaultAgentRegistry()` singleton seeded at boot. Production wiring replaces with tenant-scoped registry loaded from `packages/erp/src/agent/bootstrap.ts`.
+- All writes go through `withIdempotency()` (Phase 3 contract).
+- Branch: `karpathy/agent-layer` on both `SamStep74/A1-Suite-Local-MAX` and `Armosphera/A1-Suite-Local-MAX`.
+
+### ✅ Phase 6 — Finance Close Assistant: ROUTE WIRED
+
+- `apps/inventory/src/app/api/erp/finance-close/route.ts` exposes 4 endpoints:
+  - `GET  /api/erp/finance-close/checklist?period=...` — get close checklist snapshot.
+  - `PUT  /api/erp/finance-close/checklist` — mark item status (done|skipped|in_progress); `skipped` requires note.
+  - `POST /api/erp/finance-close/proposal` — save journal proposal (NEVER posts — that's the workflow's job).
+  - `HEAD /api/erp/finance-close/periods` — list periods with state.
+- Uses `createCloseStore()` singleton seeded with `defaultCloseChecklist()`. The proposal → ledger flow goes through `/api/erp/workflow/preview` + `/confirm`.
+- Branch: `karpathy/finance-close` on both mirrors.
+
+### ✅ HH migration — schema + dryrun + karpathy eval shipped
+
+- `SamStep74/A1-SMB-HH-HY-MAX/karpathy/hh-rbac-migration` branch (also mirrored to `Armosphera/A1-SMB-HH-HY-MAX`):
+  - `prisma/schema.prisma` +63 lines: 4 new models `RbacRole`, `RbacPermission`, `RbacRolePermission`, `RbacUserRole` (verbatim MAX V1 contract §2.4). Existing `RbacAudit` table unchanged.
+  - `prisma/migrations/20260621_hh_rbac_migration/migration.sql`: idempotent `CREATE TABLE IF NOT EXISTS` for all 4 tables.
+  - `scripts/dryrun-hh-rbac-migration.ts`: read-only mapping report. Reads every `TenantUser` row, maps the 12 HH `TenantRole` enum values to the 5 MAX `RbacRoleCode` values per the spec. Prints per-tenant distribution + confidence tier (exact / near / partial).
+  - `scripts/seed-rbac.ts` (existing, 14 KB): seeds 5 roles + 50 permissions (29 MAX V1 + 21 HH extensions) + role×permission matrix, idempotent.
+  - `evals/karpathy/hh-rbac-migration.{json,tsv}`: contract enforcing additive migration + idempotent seed + read-only dryrun.
+
+### ✅ Next.js route tests shipped
+
+- `apps/inventory/src/app/api/erp/workflow/route.test.ts` (vitest): 6 cases covering POST parse (200/400), PUT preview (200), PATCH confirm (400 missing runId), DELETE cancel (400 missing runId), GET runs (200 list).
+- `apps/inventory/src/app/api/erp/agent/route.test.ts`: 4 cases covering POST invoke (validation), PUT eval (validation), GET registry (200 list with autonomyLevels), POST invoke finance-close (asserts proposedActions[] contract).
+- `apps/inventory/src/app/api/erp/finance-close/route.test.ts`: 4 cases covering GET checklist (snapshot), PUT mark-item (400 missing fields + skipped-requires-note 400), POST proposal (400 missing body).
+
+Pattern: import route handlers directly + call with mock Request — no Next.js runtime needed.
+
+### Still pending
+
+- **Postgres adapters** for workflow run-store + audit-sink + agent registry (Phase 4 → production wiring).
+- **Cockpit UI** for Phase 6 (Phase 6 → UX: agent workbench, approval card, audit drawer).
+- **HH module-by-module refactor** (Phase 5 migration §5): `gl/`, `invoices/`, `bills/`, `payroll/`, `tax/`, `auth/`, `audit/` route middleware — sequential, per module.
+- **Cron schedule** for all 9 Karpathy evals (GitHub Actions weekly).
+
+### Karpathy eval branches (5 live, 1 new this session)
+
+| Branch | Repo | Eval | Status |
+|---|---|---|---|
+| `karpathy/invoice-extractor-contract` | `autoresearch-sboss` | Invoice field extraction (5 fields × 20 items) | ✅ 100/100 |
+| `karpathy/erp-idempotency` | `A1-Suite-Local-MAX` | Phase 3 idempotency wrapper | ✅ successMetricValue=0 |
+| `karpathy/workflow-runtime` | `A1-Suite-Local-MAX` | Phase 4 workflow runtime + route wiring | ✅ successMetricValue=0 |
+| `karpathy/agent-layer` | `A1-Suite-Local-MAX` | Phase 5 governed AI agent layer + route wiring | ✅ successMetricValue=0 |
+| `karpathy/finance-close` | `A1-Suite-Local-MAX` | Phase 6 Finance Close Assistant + route wiring | ✅ successMetricValue=0 |
+| `karpathy/hh-rbac-migration` | `A1-SMB-HH-HY-MAX` | HH 10-role → MAX 5-role RBAC schema migration | ✅ additive migration, idempotent seed |
+| `karpathy/rbac-contract` | `A1-ERP-HY` | RBAC permission matrix + auditor coverage | (pre-existing) |
+| `karpathy/egress-policy-contract-default` | `A1-Suite-Local-ANT` | Egress deny-by-default | (pre-existing) |
+| `karpathy/egress-policy-contract-public` | `A1-Suite-Local-ANT` | Egress public allowlist | (pre-existing) |
 
 
 ## Operational checks (re-run anytime)

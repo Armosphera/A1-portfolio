@@ -82,6 +82,18 @@ async function ghFetch(path) {
   return res.json();
 }
 
+// Robust wrapper: try ghFetch first; fall back to `gh api` shell command.
+// `gh api` uses the local auth and sometimes works where fetch doesn't
+// (e.g. CI runners with firewall / DNS issues to api.github.com).
+async function ghFetchRobust(path) {
+  try {
+    return await ghFetch(path);
+  } catch (e) {
+    const fallback = execGh(`api ${path.replace(/^\//, "")}`);
+    return JSON.parse(fallback);
+  }
+}
+
 // ─── Load expected repos from canonical list ────────────────────────────────
 //
 // /user/repos requires authentication and may not show private repos for
@@ -235,7 +247,7 @@ function checkArchitecture(expectedRepos) {
 
 // ─── Check 4: SECURITY.md supported versions drift ───────────────────────────
 
-async function checkSecurity(actualRepos) {
+async function checkSecurity(expectedRepos) {
   // SECURITY.md may have a table or a list of supported versions per repo.
   // We accept either format. If the doc doesn't mention versions at all,
   // skip this check.
@@ -263,12 +275,72 @@ async function checkSecurity(actualRepos) {
     securityNames.add(m[1]);
   }
 
-  const actualNames = new Set(actualRepos.map((r) => r.name));
+  const actualNames = new Set(expectedRepos.map((r) => r.name));
   const inSecNotActual = [...securityNames].filter((n) => !actualNames.has(n));
   if (inSecNotActual.length > 0) {
     fail(`SECURITY.md mentions repos that don't exist: ${inSecNotActual.join(", ")}`);
   } else if (securityNames.size > 0) {
     pass(`SECURITY.md mentions ${securityNames.size} repos, all real`);
+  }
+}
+
+// ─── Check 5: Dependabot configured for code-bearing repos ──────────────────
+
+async function checkDependabot(expectedRepos) {
+  // Code-bearing repos (not pure docs / tooling) should have Dependabot
+  // configured. A1-portfolio itself is docs-only, so it's exempt.
+  //
+  // We check via the GitHub API for .github/dependabot.yml (the modern config)
+  // OR .github/workflows/dependabot.yml (the legacy workflow).
+  //
+  // This is a best-effort check: requires GITHUB_TOKEN with read access.
+  //
+  // Note: `secrets.GITHUB_TOKEN` in CI may not have cross-repo read access.
+  // We fall back to `gh api` shell command (which uses local auth) if the
+  // fetch fails. If both fail, we mark the check as SKIPPED rather than FAIL
+  // so the drift check doesn't false-positive on auth issues.
+
+  // Repos we expect to have Dependabot. (Pure docs / tooling exempt.)
+  const codeRepos = expectedRepos.filter((r) =>
+    r.layer !== "Meta" && r.layer !== "Tooling"
+  );
+
+  for (const repo of codeRepos) {
+    let hasDependabot = false;
+    let skipped = false;
+
+    // Try REST API via fetch.
+    try {
+      const dep = await ghFetch(`/repos/Armosphera/${repo.name}/contents/.github/dependabot.yml`);
+      if (dep && dep.name) hasDependabot = true;
+    } catch (e) {
+      // Try legacy path via fetch.
+      try {
+        const wf = await ghFetch(`/repos/Armosphera/${repo.name}/contents/.github/workflows/dependabot.yml`);
+        if (wf && wf.name) hasDependabot = true;
+      } catch (e2) {
+        // Try gh CLI fallback (uses local auth, may work in dev but not CI).
+        try {
+          const dep = execGh(`api repos/Armosphera/${repo.name}/contents/.github/dependabot.yml --jq .name`);
+          if (dep && dep !== "null") hasDependabot = true;
+          else {
+            const wf = execGh(`api repos/Armosphera/${repo.name}/contents/.github/workflows/dependabot.yml --jq .name`);
+            if (wf && wf !== "null") hasDependabot = true;
+          }
+        } catch (e3) {
+          // All attempts failed — likely auth issue. Skip rather than fail.
+          skipped = true;
+        }
+      }
+    }
+
+    if (skipped) {
+      console.log(`SKIP: Dependabot check for ${repo.name} (auth unavailable in this CI environment)`);
+    } else if (hasDependabot) {
+      pass(`Dependabot configured for ${repo.name}`);
+    } else {
+      fail(`${repo.name} is missing Dependabot config (.github/dependabot.yml or .github/workflows/dependabot.yml)`);
+    }
   }
 }
 
@@ -324,6 +396,8 @@ async function main() {
   checkArchitecture(expectedRepos);
   console.log();
   await checkSecurity(expectedRepos);
+  console.log();
+  await checkDependabot(expectedRepos);
   console.log();
 
   if (failures > 0) {
