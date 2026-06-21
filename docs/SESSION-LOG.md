@@ -331,3 +331,70 @@ All 9 requirePermission calls in invoices module swapped to feature-flag-guarded
 | `84910d0` | test(rbac): bridge-middleware tests |
 | `cd18ee4` | feat(rbac): bridge middleware |
 | `0a01dd6` | feat(rbac): schema prisma (RbacRole etc) |
+
+
+## Wave 12 — 2026-06-21: Bulk HH route migration + Karpathy cron
+
+### HH route migration: 100% complete
+
+All 26 HH route modules (in addition to the invoices pilot) migrated to `requirePermissionBridge` via the `RBR_ENABLED` feature flag:
+
+```
+src/modules/ai/routes.ts:           5 calls
+src/modules/apikeys/routes.ts:      7 calls
+src/modules/approvals/routes.ts:   12 calls
+src/modules/assets/routes.ts:       7 calls
+src/modules/audit/routes.ts:        4 calls
+src/modules/banking/routes.ts:      6 calls
+src/modules/bills/routes.ts:        7 calls
+src/modules/documents/routes.ts:    7 calls
+src/modules/expenses/routes.ts:     7 calls
+src/modules/fiscal-periods/routes.ts: 5 calls
+src/modules/fx/routes.ts:           6 calls
+src/modules/gl/routes.ts:          15 calls
+src/modules/invites/routes.ts:      4 calls
+src/modules/invoices/routes.ts:     9 calls (pilot)
+src/modules/journals/routes.ts:     5 calls
+src/modules/notifications/routes.ts: 7 calls
+src/modules/numbering/routes.ts:    2 calls
+src/modules/parties/routes.ts:      2 calls
+src/modules/payroll/routes.ts:      8 calls
+src/modules/periods/routes.ts:      6 calls
+src/modules/reference/routes.ts:   13 calls
+src/modules/reports/routes.ts:      7 calls
+src/modules/schedules/routes.ts:    6 calls
+src/modules/tax/routes.ts:           5 calls
+src/modules/tenant-lifecycle/routes.ts: 3 calls
+src/modules/tenants/routes.ts:      7 calls
+src/modules/webhooks/routes.ts:    11 calls
+
+Total: 174 callsites migrated across 27 files
+```
+
+### Karpathy evals cron (Wave 12)
+
+New `.github/workflows/karpathy-evals.yml` runs every 6 hours:
+
+| Contract | Eval files | Schedule |
+|---|---|---|
+| shell-health | 1 | `0 */6 * * *` |
+| erp-idempotency | 5 (bom, stock-moves, vendor-bills, sales-orders, idempotency) | `0 */6 * * *` |
+| workflow-runtime | 8 (parser, registry, audit, approval, batch, versioning, finance-close-tools, runtime) | `0 */6 * * *` |
+| agent-layer | 5 (agent, cost-logger, structured-output, policy, integration) | `0 */6 * * *` |
+
+On regression, the workflow auto-opens a GitHub issue with label `karpathy-eval`.
+
+### Route migration audit test
+
+New `test/unit/rbac-route-migration-audit.test.ts` enforces the migration pattern:
+- 30 tests, one per route file
+- Verifies: zero raw `requirePermission(` calls, `RBR_ENABLED` flag declared, `guard()` selector used, `requirePermissionBridge` imported, all `guard()` calls reference known HH permission codes
+
+Test passes locally. Future route changes that violate the pattern will fail the audit.
+
+### tsc clean + 3 RBAC test suites pass
+
+- `tsc --noEmit` exit 0 (all 27 migrated route files + bridge middleware + audit test)
+- `rbac-bridge.test.ts`: 15/15 passing
+- `rbac-bridge-middleware.test.ts`: 10/10 passing
+- `rbac-route-migration-audit.test.ts`: 30/30 passing
