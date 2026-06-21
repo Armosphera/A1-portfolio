@@ -121,6 +121,11 @@ for d in "${SWEEP_DIRS[@]}"; do
     drift=$((drift + c))
   fi
 done
+# Negative-test hook: HEALTH_FAKE_DIRTY=1 simulates drift without touching real data.
+if [ "${HEALTH_FAKE_DIRTY:-0}" = "1" ]; then
+  fail "(simulated drift via HEALTH_FAKE_DIRTY=1)"
+  drift=$((drift + 1))
+fi
 if [ "$drift" -eq 0 ]; then
   ok "sweep clean: ${#SWEEP_DIRS[@]}/${#SWEEP_DIRS[@]} program.md files point to Armosphera mirror"
 else
