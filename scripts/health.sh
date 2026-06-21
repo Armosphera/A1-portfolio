@@ -167,6 +167,32 @@ else
 fi
 
 # -------- summary --------
+
+# === [5] Portfolio hygiene drift detection ===
+# Verify each repo has the standard portfolio hygiene files.
+HYGIENE_FILES=(
+  "LICENSE"
+  ".github/dependabot.yml"
+  ".github/SECURITY.md"
+  ".github/workflows/karpathy-evals.yml"
+  "AGENTS.md"
+  "scripts/health.sh"
+)
+hygiene_ok=0
+hygiene_fail=0
+for repo in "${REPOS[@]}"; do
+  for file in "${HYGIENE_FILES[@]}"; do
+    status=$(curl -s -H "$AUTH" "$API/repos/$ORG/$repo/contents/$file" | jq -r '.name // "MISSING"')
+    if [ "$status" != "$file" ]; then
+      fail "[hygiene] $repo: missing $file"
+      hygiene_fail=$((hygiene_fail + 1))
+    else
+      hygiene_ok=$((hygiene_ok + 1))
+    fi
+  done
+done
+ok "[hygiene] $hygiene_ok/$((hygiene_ok + hygiene_fail)) hygiene files present across ${#REPOS[@]} repos"
+
 printf "\n%s=== Summary ===%s\n" "$BOLD" "$RESET"
 if [ "$errors" -eq 0 ]; then
   printf "%sOK%s — all 4 portfolio invariants hold\n" "$GREEN" "$RESET"
