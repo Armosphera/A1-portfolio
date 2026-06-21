@@ -104,9 +104,11 @@ Each engine repo ships an `INTEGRATION.md` describing the vendor procedure. Apps
 
 ## What's unblocked now (next coding sprint, week 2 of the MAX roadmap)
 
-- **Phase 3 — `withIdempotency()` wrappers** in `packages/erp/src/{vendor-bills,sales-orders,stock-moves,bom}/`. Prereq for Phase 4.
 - **HH migration** to MAX RBAC contract (`A1-SMB-HH-HY-MAX/docs/rbac-and-ux-migration.md`).
-- **Portfolio health check** for the 4 MAX repos (`A1-Platform-MAX`, `A1-SMB-HH-HY-MAX`, `A1-SMB-CRM-HY-MAX`, `A1-SMB-CRM-HY-MAX-web`) — once mirrored to `armosphera/`.
+- **Phase 4 — workflow runtime** (`packages/erp/src/workflow/`): parser, executor, approval-inbox, audit, run-store all present; needs orchestration wiring.
+- **Phase 5 — agent layer** (`packages/erp/src/agent/`): registry, model-adapter, policy, retrieval, structured-output all present; needs Finance Close integration.
+- **Phase 6 — Finance Close Assistant** (`packages/erp/src/finance-close/`): checklist, store, types present; needs Fastify route in `apps/inventory/src/app/api/finance-close/` + cockpit UI.
+- **Karpathy eval branches** for all phases: `karpathy/invoice-extractor-contract` (autoresearch-sboss, score 100/100) and `karpathy/erp-idempotency` (MAX, successMetricValue=0 met) are live.
 
 
 ## Operational checks (re-run anytime)
