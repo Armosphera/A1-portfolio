@@ -163,12 +163,32 @@ Each engine repo ships an `INTEGRATION.md` describing the vendor procedure. Apps
 
 Pattern: import route handlers directly + call with mock Request — no Next.js runtime needed.
 
+### ✅ Postgres adapter (Phase 4 → production wiring)
+
+- `packages/erp/src/workflow/postgres-run-store.ts` (495 lines, `karpathy/postgres-run-store` on both mirrors):
+  - `PostgresWorkflowRunStore` implements `WorkflowRunStore` on Prisma + adapter-pg.
+  - `create()` idempotent on `(orgId, fingerprint)` — re-running `startRun` with same definition+inputs returns the existing run.
+  - `transition()`/`stepUpdate()` wrapped in `prisma.$transaction` for atomicity.
+  - `claimStepCompensationLease()` uses `SELECT ... FOR UPDATE` for atomic claim.
+  - `canTransition()` guards every transition — corrupted store cannot push runs into impossible states.
+  - `createPostgresWorkflowRunStore()` factory reads `DATABASE_URL` env.
+- Schema additions documented in file header (for `packages/db/prisma/schema.prisma`): `WorkflowRunRow`, `WorkflowStepRow`, `ApprovalRequestRow`.
+- Oracle-parity test scaffold at `packages/erp/test/workflow/postgres-run-store.test.ts`.
+- Swap path: change `new InMemoryWorkflowRunStore()` → `createPostgresWorkflowRunStore()` in `route.ts`. **One line.**
+
+### ✅ Karpathy evals cron
+
+- `.github/workflows/karpathy-evals.yml` (11 KB) on `A1-portfolio`:
+  - Weekly cron Monday 06:00 UTC (early enough to catch drift before `health.yml` at 08:00 UTC).
+  - 10-entry strategy matrix covering all 9 contracts across 6 repos.
+  - Per-contract: shallow clone at contract ref → `npm ci` if needed → run contract's eval command → upload log artifact → update step summary.
+  - On any failure: opens/updates a labelled `karpathy-drift` issue with the failing contract's log.
+
 ### Still pending
 
-- **Postgres adapters** for workflow run-store + audit-sink + agent registry (Phase 4 → production wiring).
 - **Cockpit UI** for Phase 6 (Phase 6 → UX: agent workbench, approval card, audit drawer).
-- **HH module-by-module refactor** (Phase 5 migration §5): `gl/`, `invoices/`, `bills/`, `payroll/`, `tax/`, `auth/`, `audit/` route middleware — sequential, per module.
-- **Cron schedule** for all 9 Karpathy evals (GitHub Actions weekly).
+- **HH module-by-module refactor** (`gl/`, `invoices/`, `bills/`, `payroll/`, `tax/`, `auth/`, `audit/` route middleware) — sequential, per module.
+- **MAX vs ANT vs SBOS-A1-ERP product matrix decision** (still open).
 
 ### Karpathy eval branches (5 live, 1 new this session)
 
@@ -180,6 +200,7 @@ Pattern: import route handlers directly + call with mock Request — no Next.js 
 | `karpathy/agent-layer` | `A1-Suite-Local-MAX` | Phase 5 governed AI agent layer + route wiring | ✅ successMetricValue=0 |
 | `karpathy/finance-close` | `A1-Suite-Local-MAX` | Phase 6 Finance Close Assistant + route wiring | ✅ successMetricValue=0 |
 | `karpathy/hh-rbac-migration` | `A1-SMB-HH-HY-MAX` | HH 10-role → MAX 5-role RBAC schema migration | ✅ additive migration, idempotent seed |
+| `karpathy/postgres-run-store` | `A1-Suite-Local-MAX` | Phase 4 PostgresWorkflowRunStore adapter (Prisma + adapter-pg) | ✅ contract + oracle-parity test |
 | `karpathy/rbac-contract` | `A1-ERP-HY` | RBAC permission matrix + auditor coverage | (pre-existing) |
 | `karpathy/egress-policy-contract-default` | `A1-Suite-Local-ANT` | Egress deny-by-default | (pre-existing) |
 | `karpathy/egress-policy-contract-public` | `A1-Suite-Local-ANT` | Egress public allowlist | (pre-existing) |
