@@ -22,6 +22,10 @@ This document is the canonical source of truth for licensing across the A1 produ
 | [`Armosphera/SBOS-A1-ERP`](../SBOS-A1-ERP) | private | Proprietary | `LicenseRef-Armosphera-Proprietary` | Open-core distribution of A1-ERP-HY (de-privatized, brand-neutral). |
 | [`Armosphera/A1-portfolio`](../A1-portfolio) | public | Proprietary | `LicenseRef-Armosphera-Proprietary` | Meta-docs (licensing, architecture, security, contributing). |
 | [`Armosphera/a1-cross-link-sweep`](../a1-cross-link-sweep) | public | Proprietary | `LicenseRef-Armosphera-Proprietary` | Cross-account link sweep tooling (Karpathy-eval infra). |
+| [`Armosphera/A1-Platform-MAX`](../A1-Platform-MAX) | private | Proprietary | `LicenseRef-Armosphera-Proprietary` | Mirror of SamStep74/A1-Platform-MAX (multi-tenant cloud). |
+| [`Armosphera/A1-SMB-CRM-HY-MAX`](../A1-SMB-CRM-HY-MAX) | private | Proprietary | `LicenseRef-Armosphera-Proprietary` | Mirror of SamStep74/A1-SMB-CRM-HY-MAX (HayHashvapah CRM). |
+| [`Armosphera/A1-SMB-CRM-HY-MAX-web`](../A1-SMB-CRM-HY-MAX-web) | public | Proprietary | `LicenseRef-Armosphera-Proprietary` | Mirror of SamStep74/A1-SMB-CRM-HY-MAX-web (TanStack Start frontend). |
+| [`Armosphera/A1-SMB-HH-HY-MAX`](../A1-SMB-HH-HY-MAX) | private | Proprietary | `LicenseRef-Armosphera-Proprietary` | Mirror of SamStep74/A1-SMB-HH-HY-MAX (HayHashvapah SMB). |
 
 ## Why "Proprietary" and not MIT
 
