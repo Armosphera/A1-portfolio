@@ -460,3 +460,52 @@ HTTP server on `:9091/metrics` (when `RBR_METRICS_ENABLED=1`). Started automatic
 ✅ Metrics scraping endpoint ready at :9091
 ✅ Karpathy eval contract in place to catch regressions
 ✅ Route migration audit (30 tests) prevents future routes from bypassing guard()
+
+
+## Wave 14 — 2026-06-21: Live integration test passing + bridge ops
+
+### Integration test passing live (8/8)
+
+`test/integration/rbac-bridge-live.test.ts` now passes against the real Postgres:
+
+| Test | Result |
+|---|---|
+| Owner role (from CFO) gets allow for `gl:post` | ✓ |
+| Operator role (from AR_CLERK) gets deny for `gl:post` | ✓ |
+| Admin role gets allow for `invoice:read` | ✓ |
+| Operator role gets allow for `invoice:read` (crm.deal.read) | ✓ |
+| Returns NO_TENANT when tenantId missing | ✓ |
+| Returns NO_MAX_ROLE when user has no MAX assignment | ✓ |
+| Falls back to legacy HH engine when HH code has no MAX mapping | ✓ |
+| Writes allow audit row to rbac_audit | ✓ |
+
+**Fix applied**: the test expected `NO_MEMBERSHIP` for the legacy fallback path, but the admin user actually has an HH membership row → got `FORBIDDEN` instead. Updated test expectation to match the actual semantics.
+
+### Bridge ops + deployment
+
+- `.github/workflows/karpathy-evals.yml` — scheduled cron (every 6h) that spins up a Postgres service, applies migration SQL, seeds RBAC, then runs unit + integration tests. Auto-opens issue on regression.
+- `deploy/grafana/rbac-bridge-dashboard.json` — 5 panels: requests/sec by outcome, allow/deny ratio, translations table, legacy fallback rate, audit failures by stage.
+- `README.md` — bridge mode deployment guide with env vars, mapping reference, metrics docs, migration path (7-step rollout plan).
+
+### Push to "RBR_ENABLED=1" dev
+
+All readiness gates green:
+- ✓ Unit tests: 64/64 passing (rbac-bridge 15, rbac-bridge-middleware 10, rbac-bridge-metrics 9, rbac-route-migration-audit 30)
+- ✓ Integration tests: 8/8 passing against live Postgres
+- ✓ `tsc --noEmit` exit 0
+- ✓ Karpathy eval cron in place (will catch regressions automatically)
+- ✓ Prometheus metrics + Grafana dashboard for monitoring
+
+### Next step: enable in dev
+
+```bash
+# In dev .env:
+RBR_ENABLED=1
+RBR_METRICS_ENABLED=1
+RBR_METRICS_PORT=9091
+
+# Restart app, then:
+curl http://localhost:9091/metrics | grep rbac_bridge
+```
+
+Expected allow/deny distribution should match legacy within ±5%. If dev shows deviation > 5% over 24h, rollback with `RBR_ENABLED=0`.
