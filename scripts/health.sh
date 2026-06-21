@@ -57,13 +57,14 @@ REPOS=(
   A1-SMB-HH-HY-MAX
   A1-SMB-CRM-HY-MAX
   A1-SMB-CRM-HY-MAX-web
+  A1-portfolio
   a1-cross-link-sweep
   autoresearch-sboss
 )
 
-EXPECTED_TOTAL=14
+EXPECTED_TOTAL=15
 EXPECTED_PUBLIC=8
-EXPECTED_PRIVATE=6
+EXPECTED_PRIVATE=7
 
 errors=0
 warnings=0
