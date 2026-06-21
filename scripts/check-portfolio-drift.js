@@ -85,7 +85,23 @@ async function ghFetch(path) {
 // ─── Load ground truth from armosphera org ────────────────────────────────────
 
 async function loadActualRepos() {
-  const repos = await ghFetch("/orgs/Armosphera/repos?per_page=100&type=all");
+  // /user/repos requires authentication and shows private repos too.
+  // Fall back to /orgs/<name>/repos or /users/<name>/repos for unauthenticated
+  // discovery (limited to public).
+  let repos;
+  try {
+    repos = await ghFetch("/user/repos?per_page=100&visibility=all&affiliation=owner");
+  } catch (e) {
+    try {
+      repos = await ghFetch("/orgs/Armosphera/repos?per_page=100&type=all");
+    } catch (e2) {
+      if (e2.message.includes("404")) {
+        repos = await ghFetch("/users/Armosphera/repos?per_page=100&type=all");
+      } else {
+        throw e2;
+      }
+    }
+  }
   return repos
     .filter((r) => !r.fork && !r.archived)
     .map((r) => ({
