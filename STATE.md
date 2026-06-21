@@ -17,6 +17,7 @@ Across 4 waves in this session, we delivered:
 - **Wave 5 (CI wire-up):** `di-contract-frozen` lane wired into `A1-AI-Core` CI (3/3 jobs green). `A1-portfolio` drift-detection CI + `expected-repos.json` (15/15 PASS, catches real drift on every push). `A1-AI-Core` v0.3.0 release cut.
 - **Wave 6 (cross-cutting):** 2nd eval lane `fallback-models-stability` in `A1-AI-Core` (4/4 PASS, wired into CI — both lanes green). `DUAL-LICENSE-PREP.md` migration playbook. `docs/CROSS-REPO-COORDINATION.md` with 8 recipes.
 - **Wave 7 (portfolio polish):** `REPO-TEMPLATE.md` (9-step recipe for adding new A1 repos). `CONTRIBUTORS.md` (meta-level contributor list). 4 new mirror repos registered in `expected-repos.json`. Drift check extended with Dependabot config check + `ghFetchRobust` fallback (handles CI auth issues).
+- **Wave 8 (real-world validation):** `KARPATHY-EVAL-INVENTORY.md` (canonical inventory of 13+ lanes across 8 repos, including autoresearch-sboss's 33-example regression gate). `a1-ai-coder-plan.md` (historical reference — original Wave 1+2+3 plan). `A1-portfolio` v0.3.0 released.
 
 **Total commits this session:** ~35+ (Wave 1+2+3+4).
 **Total GitHub Releases this session:** 14 (7 initial + 7 Wave 1+2 milestones).
