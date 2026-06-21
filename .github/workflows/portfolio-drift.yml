@@ -1,0 +1,47 @@
+name: portfolio-drift
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  schedule:
+    # Weekly — every Monday at 06:00 UTC
+    - cron: '0 6 * * 1'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  drift:
+    name: Check portfolio docs against armosphera/ org
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      # No npm install needed — check-portfolio-drift.js is zero-dep
+      # (uses fetch + child_process to talk to GitHub API via `gh`).
+
+      - name: Authenticate with GitHub
+        run: echo "GITHUB_TOKEN set: $([ -n "$GITHUB_TOKEN" ] && echo yes || echo no)"
+
+      - name: Run drift check
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: node scripts/check-portfolio-drift.js
+
+      - name: Summary on failure
+        if: failure()
+        run: |
+          echo "## Portfolio drift detected" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "Run \`node scripts/check-portfolio-drift.js\` locally to see what changed." >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "Update the affected doc(s) — README.md / LICENSING.md / ARCHITECTURE.md / SECURITY.md — to match the current armosphera/ org state." >> $GITHUB_STEP_SUMMARY
