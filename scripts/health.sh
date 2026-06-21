@@ -53,19 +53,12 @@ REPOS=(
   A1-AI-ERP-SBOS-MSTUDIO-sovereign
   A1-Validator
   SBOS-A1-ERP
+  a1-cross-link-sweep
   autoresearch-sboss
 )
 
-SWEEP_DIRS=(
-  hhvh vat-return vat-return-form payroll-am chart-of-accounts-am
-  phone-am regions-am einvoice-am
-  ru-identifiers phone-ru ru-einvoice payroll-ru regions-ru chart-of-accounts-ru vat-ru
-  model-policy chat-client settings-store model-catalog
-  supplemental-sources open-notebook product-research
-)
-
-EXPECTED_TOTAL=10
-EXPECTED_PUBLIC=6
+EXPECTED_TOTAL=11
+EXPECTED_PUBLIC=7
 EXPECTED_PRIVATE=4
 
 errors=0
@@ -106,32 +99,46 @@ else
   errors=$((errors + 1))
 fi
 
-# -------- 3. 22-file cross-account sweep --------
+# -------- 3. 22-file cross-account sweep (via a1-clx) --------
 printf "\n%s[3] 22-file cross-account sweep (program.md SamStep74 refs)%s\n" "$BOLD" "$RESET"
-drift=0
-for d in "${SWEEP_DIRS[@]}"; do
-  c=$(curl -s -H "$AUTH" "$API/repos/$ORG/autoresearch-sboss/contents/examples/$d/program.md" \
-      | jq -r '.content // ""' | base64 -d 2>/dev/null \
-      | { grep -c "SamStep74\|samstep74" 2>/dev/null || true; } | head -1)
-  c=${c:-0}
-  if [ "$c" = "0" ]; then
-    ok "$d"
+
+# The cross-link-sweep harness lives in Armosphera/a1-cross-link-sweep as a
+# standalone CLI. Cache it under /tmp/a1-clx-$CLX_VERSION to avoid re-cloning
+# on every run; refresh if the cache is missing or stale.
+CLX_VERSION="${CLX_VERSION:-main}"
+CLX_CACHE="/tmp/a1-clx-${CLX_VERSION}"
+if [ ! -d "$CLX_CACHE" ]; then
+  rm -rf /tmp/a1-clx-*  # clean up older versions
+  if command -v git >/dev/null 2>&1; then
+    git clone --depth 1 --branch "$CLX_VERSION" \
+      "https://github.com/Armosphera/a1-cross-link-sweep.git" "$CLX_CACHE" \
+      >/dev/null 2>&1 || { fail "could not clone a1-cross-link-sweep @ $CLX_VERSION"; errors=$((errors + 1)); }
   else
-    fail "$d: $c SamStep74 ref(s) remain"
-    drift=$((drift + c))
+    fail "git not available — cannot fetch a1-clx"
+    errors=$((errors + 1))
   fi
-done
-# Negative-test hook: HEALTH_FAKE_DIRTY=1 simulates drift without touching real data.
+fi
+
+# Negative-test hook: HEALTH_FAKE_DIRTY=1 short-circuits before invoking a1-clx.
 if [ "${HEALTH_FAKE_DIRTY:-0}" = "1" ]; then
   fail "(simulated drift via HEALTH_FAKE_DIRTY=1)"
-  drift=$((drift + 1))
-fi
-if [ "$drift" -eq 0 ]; then
-  ok "sweep clean: ${#SWEEP_DIRS[@]}/${#SWEEP_DIRS[@]} program.md files point to Armosphera mirror"
-else
-  fail "sweep drift: $drift SamStep74 refs across ${#SWEEP_DIRS[@]} files"
+  drift=1
   errors=$((errors + 1))
-  warn "re-run 'cd autoresearch-sboss/examples/cross-link-sweep && python3 workflow.py && python3 eval.py'"
+else
+  # Run a1-clx eval — exits 0 if all 22 files are clean.
+  a1clx_out=$("$CLX_CACHE/a1-clx" eval 2>&1) || a1clx_rc=$?
+  a1clx_rc=${a1clx_rc:-0}
+  # Surface the score line.
+  score_line=$(echo "$a1clx_out" | grep -E "^score:" | head -1 || true)
+  [ -n "$score_line" ] && printf "  %s\n" "$score_line"
+  if [ "$a1clx_rc" -eq 0 ]; then
+    ok "sweep clean: 22/22 program.md files point to Armosphera mirror"
+  else
+    fail "sweep drift detected (a1-clx eval exit=$a1clx_rc)"
+    warn "run 'a1-clx sweep' to commit drift back to canonical refs"
+    drift=1
+    errors=$((errors + 1))
+  fi
 fi
 
 # -------- 4. Dependabot + SECURITY.md coverage --------
