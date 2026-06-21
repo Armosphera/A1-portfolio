@@ -198,10 +198,26 @@ Pattern: import route handlers directly + call with mock Request — no Next.js 
 
 Production wiring: replace the page's `setTimeout`-based mock workflow calls with real `POST /api/erp/workflow/{preview,confirm}` + `PUT /api/erp/finance-close/checklist`.
 
+### ✅ HH module-by-module refactor — engine + tax + payroll shipped
+
+- `SamStep74/A1-SMB-HH-HY-MAX/karpathy/hh-rbac-engine` branch (mirrored to `Armosphera/A1-SMB-HH-HY-MAX`):
+  - `src/rbac-engine.ts` (301 lines): MAX V1 RBAC engine for HH.
+    - `HH_TENANT_ROLE_TO_MAX` — maps all 12 HH `TenantRole` enum values (OWNER, ADMIN, CFO, CONTROLLER, ACCOUNTANT, AR_CLERK, AP_CLERK, PAYROLL_ADMIN, TAX_PREPARER, VIEWER, AUDITOR, API_BOT) to the 5 MAX `RbacRoleCode` values.
+    - `ROLE_PERMISSIONS` — 50-row matrix (29 MAX V1 + 21 HH extensions), matching MAX contract §2.3 column-by-column.
+    - `checkPermission()` — result-style API. Reads `rbac_user_roles` first, falls back to `TenantUser.role` during the migration window.
+    - `requirePermission()` — throwing variant. Dual-writes to BOTH `rbac_audit` (new) AND `audit_events` (HH legacy) per §7.
+  - `src/middleware/max-rbac.ts` — Fastify preHandler factory `requireMaxPermission(perm)` that wraps the engine.
+  - `src/modules/tax/routes.ts` — imports `requireMaxPermission`. Both legacy HH (`requirePermission('gl:read')`) and MAX-style preHandlers chain during the dual-write window.
+  - `src/modules/payroll/routes.ts` — same pattern: legacy `requirePermission('payroll:read'/'write'/'run')` + new `requireMaxPermission('cfo.snapshot.run'/'approve')`.
+  - `test/unit/rbac-engine.test.ts` — 7 MAX contract tests from §2.7 reproduced verbatim (owner-gets-all, admin-lacks-org.user.manage, accountant-lacks-crm.deal.delete, operator-lacks-finance.report.read, viewer-reads-only, mapping-complete, hierarchy-holds).
+  - `evals/karpathy/hh-rbac-engine.{json,tsv}` — contract enforcing all of the above.
+
+Per the §7 rollout plan, this is the engine + 2 smallest-blast-radius modules. Remaining modules (`gl/`, `invoices/`, `bills/`, `auth/`, `audit/`) are follow-ups — each is the same pattern (additive preHandler + cutover after 30-day parity).
+
 ### Still pending
 
-- **HH module-by-module refactor** (`gl/`, `invoices/`, `bills/`, `payroll/`, `tax/`, `auth/`, `audit/` route middleware) — sequential, per module.
 - **MAX vs ANT vs SBOS-A1-ERP product matrix decision** (still open).
+- **HH remaining modules** (gl, invoices, bills, auth, audit) — sequential after engine + tax + payroll.
 
 ### Karpathy eval branches (5 live, 1 new this session)
 
