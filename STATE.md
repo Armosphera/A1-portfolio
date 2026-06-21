@@ -148,7 +148,27 @@ Documented as future work, NOT regressions from this session:
 
 ---
 
-## Open Wave 5+ candidates (NOT done in this session)
+## Wave 6 subagent contribution + remediation
+
+The Wave 6 AI-coder subagent dispatched to autoresearch-sboss surfaced a real
+correctness issue in our STATE.md: my original Wave 1 commit (`AGENTS.md`) and
+Wave 2 commits (`.orchestration/`) for autoresearch-sboss **did not persist**
+to the current `main`. Likely cause: the repo had a parallel branch where
+upstream development was happening (e.g. `ant/main` per HANDOFF.md in ANT),
+and the Wave 1/2 commits landed against a stale view.
+
+**Remediation in Wave 6:**
+
+1. Subagent wrote `docs/ARCHITECTURE.md` (152 lines) — applied via commit `84a0b3f`.
+2. Re-applied `AGENTS.md` (Wave 1) and `.orchestration/WORKFLOW.md` (Wave 2) via
+   commit `1ae026e`.
+3. Cut `v0.3.0` with accurate release notes documenting the gap.
+
+**Lesson:** when a repo has active development on parallel branches, commits
+to `main` may not land cleanly. The right way is to PR against `main` rather
+than direct push, and verify with `gh api repos/.../contents/` after.
+
+## Open Wave 7+ candidates (NOT done in this session)
 
 These were identified but not executed:
 
