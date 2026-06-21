@@ -244,3 +244,24 @@ The pattern is **reproducible for any multi-repo product family**.
 
 *This is the canonical session log. For the latest snapshot, see `STATE.md`.*
 *For the original plan, see `docs/a1-ai-coder-plan.md`. For per-repo state, see each repo's `AGENTS.md` + `STATE.md` + releases.*
+
+## Wave 10 — 2026-06-21: Workstream split + Phase 3 test coverage
+
+### Split with neighbour (autoresearch-sboss / Karpathy nanochat)
+
+| Workstream | Domain | Current focus |
+|---|---|---|
+| **Neighbour** (autoresearch-sboss) | Eval framework + validators | 37 examples, run_evals.py CLI, v0.3.0 |
+| **Mac OC** (A1-MAX product) | Product code + test coverage | Phase 3 idempotency tests, Karpathy eval contracts |
+
+### Commits (SamStep74/A1-Suite-Local-MAX)
+
+| SHA | Description |
+|---|---|
+| `f0eea04` | test(bom): BOM lifecycle + idempotency contract tests (25+ tests) |
+| `436b6a7` | test(stock-moves): stock move idempotency tests (15+ tests) |
+| `4fac032` | eval(karpathy): erp-idempotency.json contract |
+
+### Verified: all planned phases exist on main
+
+Phase 3 (idempotency), Phase 4 (workflow runtime), Phase 5 (agent layer), Phase 6 (Finance Close), phase9-rbac — all implemented.
