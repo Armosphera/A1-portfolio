@@ -1,0 +1,106 @@
+# A1 Portfolio Health Check
+# Weekly cron + manual dispatch. Runs scripts/health.sh against the live GitHub API.
+# On failure: opens an issue with the diff so we know about drift quickly.
+name: Portfolio health
+
+on:
+  schedule:
+    # Mondays 08:00 UTC. Cheap (no git clone, just REST calls).
+    - cron: "0 8 * * 1"
+  workflow_dispatch:
+    inputs:
+      fail_on_warning:
+        description: "Treat warnings as errors"
+        required: false
+        default: "false"
+
+permissions:
+  contents: read
+  issues: write
+
+jobs:
+  health:
+    name: Portfolio invariants
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install jq
+        run: sudo apt-get install -y jq
+
+      - name: Run health.sh
+        id: health
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          NO_COLOR: "1"
+        run: |
+          chmod +x scripts/health.sh
+          set +e
+          ./scripts/health.sh > /tmp/health.log 2>&1
+          exit_code=$?
+          set -e
+          echo "exit=$exit_code"
+          cat /tmp/health.log
+          echo "exit-code=$exit_code" >> "$GITHUB_OUTPUT"
+
+      - name: Upload log artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: health-log
+          path: /tmp/health.log
+          retention-days: 30
+
+      - name: Open issue on failure
+        if: steps.health.outputs.exit-code != '0'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            const log = fs.readFileSync('/tmp/health.log', 'utf8');
+            const today = new Date().toISOString().slice(0, 10);
+            const title = `[health] Portfolio invariant drift detected — ${today}`;
+            const body = [
+              '## Portfolio health check failed',
+              '',
+              'Run: <https://github.com/Armosphera/A1-portfolio/actions/runs/${{ github.run_id }}>',
+              '',
+              '```',
+              log.slice(0, 6000),
+              '```',
+              '',
+              '### Suggested fixes',
+              '',
+              '1. **Repo count drift** — new repo added without updating `scripts/health.sh` REPOS array.',
+              '2. **Missing LICENSE** — re-run the LICENSE install step from the operational checklist.',
+              '3. **Sweep drift** — `cd autoresearch-sboss/examples/cross-link-sweep && python3 workflow.py && python3 eval.py`.',
+              '4. **Missing dependabot/SECURITY.md** — re-run the install step.',
+              '',
+              'After fixing, this issue will close on the next green run.',
+            ].join('\n');
+            // Avoid duplicate issues: search for open ones with the same title prefix
+            const { data: issues } = await github.rest.issues.listForRepo({
+              owner: 'Armosphera',
+              repo: 'A1-portfolio',
+              state: 'open',
+              labels: '',
+            });
+            const dup = issues.find(i => i.title.startsWith('[health] Portfolio invariant'));
+            if (dup) {
+              await github.rest.issues.createComment({
+                owner: 'Armosphera',
+                repo: 'A1-portfolio',
+                issue_number: dup.number,
+                body: `Re-failed at ${today} (run ${{ github.run_id }}):\n\n\`\`\`\n${log.slice(0, 3000)}\n\`\`\``,
+              });
+            } else {
+              await github.rest.issues.create({
+                owner: 'Armosphera',
+                repo: 'A1-portfolio',
+                title,
+                body,
+                labels: ['health', 'drift'],
+              });
+            }
