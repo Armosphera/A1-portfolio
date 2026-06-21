@@ -375,8 +375,19 @@ echo "OK — portfolio invariants hold (10 repos, 10 LICENSE, 22/22 sweep clean)
 Wire this into a GitHub Actions cron (`schedule: weekly`) under `Armosphera/A1-portfolio/.github/workflows/health.yml`
 for automated monitoring.
 
-## Open portfolio questions (need owner decisions)
+## Product matrix (closed 2026-06-21 — see `docs/PRODUCTS.md`)
 
-1. **MAX vs ANT**: which is canonical? ANT has 30 phase tags and is actively deployed; MAX is the next-gen Turbo monorepo. README of MAX says "Reimagined from `samstep74/A1-Suite-Local`" (now superseded by `Armosphera/A1-Suite-Local-MAX`) — but ANT has no deprecation note. Pick one as "live", mark the other "frozen/legacy".
-2. **Sovereign Python vs SBOS-A1-ERP TypeScript**: two stacks solving overlapping domains (RBAC, i18n, finance). Same org, different runtimes, different maturity. Pick canonical SKU; archive or scope the other.
-3. **`WIP` repo**: ~~empty, should be deleted~~ — RESOLVED 2026-06-21: deleted via `gh repo delete armosphera/WIP --yes`.
+The last open portfolio question has been resolved. The full decision
+(overlap analysis, cutover path, rollout, what it does and does not do)
+lives at [`docs/PRODUCTS.md`](./docs/PRODUCTS.md).
+
+**TL;DR:**
+- `A1-Suite-Local-MAX` is the **active dev surface** (where new code lands).
+- `A1-Suite-Local-ANT` is **frozen at v0.1.0** (tagged `ant-v0.1.0-frozen` on both mirrors).
+- `SBOS-A1-ERP` continues as the **public open-core distribution** (receives Wave N ports from `A1-ERP-HY`).
+- `A1-Platform-MAX` is the multi-tenant control plane (consumed by MAX).
+- `A1-AI-ERP-SBOS-MSTUDIO-sovereign` is the air-gapped SBOSS deployable image (distinct scope).
+
+The remaining in-scope items (Phase 8 trust/safety, cockpit UX polish,
+Postgres adapter hardening, HH cutover parity) continue in MAX per
+the existing workflow plan.
