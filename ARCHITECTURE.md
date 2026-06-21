@@ -84,8 +84,18 @@ Each engine repo ships an `INTEGRATION.md` describing the vendor procedure. Apps
               (Python glue)         (air-gapped Python)
 ```
 
+## Recently resolved (2026-06-21)
+
+- **Cross-account link sweep (SamStep74 → Armosphera):** DONE via Karpathy-style `autoresearch-sboss/examples/cross-link-sweep/` — see `autoresearch-sboss/examples/cross-link-sweep/results.tsv` (baseline 15/22 → sweep → 22/22, 7 program.md files in `examples/*/` re-pointed to `Armosphera/A1-AI-Core`). The 4 downstream apps (`A1-Suite-Local-MAX`, `A1-Suite-Local-ANT`, `autoresearch-sboss` itself, `SBOS-A1-ERP`) had their `package.json` and `README.md` cross-links updated in the same sweep.
+- **`WIP` repo:** deleted.
+- **License drift on `A1-Validator`:** pyproject.toml updated (MIT → Armosphera Proprietary) to match the new `LICENSE` file.
+- **A1-AI-Core reachability:** mirror created at `Armosphera/A1-AI-Core` (HEAD `f917e8a`, identical to `SamStep74/A1-AI-Core`). All downstream `package.json` references updated.
+- **Default branch on `A1-Validator`:** fast-forwarded from `wip/bootstrap-and-port` to `main`.
+- **Dependabot:** enabled across all 9 repos (npm + pip, weekly, monday 06:00). Vulnerability alerts + automated security fixes turned on.
+- **`SECURITY.md`:** installed in all 9 repos, links to the portfolio-wide policy in `A1-portfolio`.
+
 ## Open portfolio questions (need owner decisions)
 
-1. **MAX vs ANT**: which is canonical? ANT has 30 phase tags and is actively deployed; MAX is the next-gen Turbo monorepo. README of MAX says "Reimagined from `samstep74/A1-Suite-Local`" — but ANT has no deprecation note. Pick one as "live", mark the other "frozen/legacy".
+1. **MAX vs ANT**: which is canonical? ANT has 30 phase tags and is actively deployed; MAX is the next-gen Turbo monorepo. README of MAX says "Reimagined from `samstep74/A1-Suite-Local`" (now superseded by `Armosphera/A1-Suite-Local-MAX`) — but ANT has no deprecation note. Pick one as "live", mark the other "frozen/legacy".
 2. **Sovereign Python vs SBOS-A1-ERP TypeScript**: two stacks solving overlapping domains (RBAC, i18n, finance). Same org, different runtimes, different maturity. Pick canonical SKU; archive or scope the other.
-3. **`WIP` repo**: empty, should be deleted.
+3. **`WIP` repo**: ~~empty, should be deleted~~ — RESOLVED 2026-06-21: deleted via `gh repo delete armosphera/WIP --yes`.
