@@ -86,13 +86,28 @@ Each engine repo ships an `INTEGRATION.md` describing the vendor procedure. Apps
 
 ## Recently resolved (2026-06-21)
 
+### Day 1-3 — MAX portfolio Tier 1 (4.1-4.3 from the MAX roadmap)
+
+- **`phase9-rbac` MAX-side complete (M14.3 RLS + M14.5 RBAC):** `packages/auth/src/rbac-db.ts` (engine, 30 KB) + `demo-server.ts` (`POST /api/rbac/check` route, env-gated, loopback-only) + 7 contract tests + 4 hardening tests. Merged to `A1-Suite-Local-MAX` main in commit `fae01a5`. **Tagged `phase9-rbac-max-v1`** (lightweight, points at main `61f061cd`). Unblocks ADR-001 D2 (agent = delegate of human approver, borrows RBAC role from `Principal`).
+- **`A1-SMB-CRM-HY-MAX` Prisma 7 upgrade complete:** `prisma ^7.8.0` + `@prisma/client ^7.8.0` + `@prisma/adapter-pg ^7.8.0`. `prisma.config.ts` (defineConfig + dotenv/config) and `src/db/client.ts` (`new PrismaPg({ connectionString, connectionTimeoutMillis: 5000 }, { schema })`). Restored the 12 skipped tests in `test/integration/auth.test.ts` (P1010 cleared). `docs/prisma-7-upgrade.md` updated with status DONE.
+- **ADR-001 Approved:** Moved from `.orchestration/ai-erp-agentic-workflow/adr-001-agentic-runtime.md` (Proposed) → `docs/adr/001-agentic-runtime.md` (Approved 2026-06-21). Decisions D1-D6 unchanged. The agent identity model (D2: agent is a *delegate* of the human approver) is now binding — every workflow run that performs a write must use the approver's `Principal`. Paperclip sub-issue `GSTA-1018` marked Approved.
+
+### Earlier same-day resolutions
+
 - **Cross-account link sweep (SamStep74 → Armosphera):** DONE via Karpathy-style `autoresearch-sboss/examples/cross-link-sweep/` — see `autoresearch-sboss/examples/cross-link-sweep/results.tsv` (baseline 15/22 → sweep → 22/22, 7 program.md files in `examples/*/` re-pointed to `Armosphera/A1-AI-Core`). The 4 downstream apps (`A1-Suite-Local-MAX`, `A1-Suite-Local-ANT`, `autoresearch-sboss` itself, `SBOS-A1-ERP`) had their `package.json` and `README.md` cross-links updated in the same sweep.
 - **`WIP` repo:** deleted.
 - **License drift on `A1-Validator`:** pyproject.toml updated (MIT → Armosphera Proprietary) to match the new `LICENSE` file.
 - **A1-AI-Core reachability:** mirror created at `Armosphera/A1-AI-Core` (HEAD `f917e8a`, identical to `SamStep74/A1-AI-Core`). All downstream `package.json` references updated.
 - **Default branch on `A1-Validator`:** fast-forwarded from `wip/bootstrap-and-port` to `main`.
-- **Dependabot:** enabled across all 10 repos (npm + pip, weekly, monday 06:00). Vulnerability alerts + automated security fixes turned on. **Includes `A1-AI-Core` mirror**.
+- **Dependabot:** enabled across all 10 repos (npm + pip, weekly, monday 06:00). Vulnerability alerts + automated security fixes turned on.
 - **`SECURITY.md`:** installed in all 10 repos, links to the portfolio-wide policy in `A1-portfolio`.
+
+## What's unblocked now (next coding sprint, week 2 of the MAX roadmap)
+
+- **Phase 3 — `withIdempotency()` wrappers** in `packages/erp/src/{vendor-bills,sales-orders,stock-moves,bom}/`. Prereq for Phase 4.
+- **HH migration** to MAX RBAC contract (`A1-SMB-HH-HY-MAX/docs/rbac-and-ux-migration.md`).
+- **Portfolio health check** for the 4 MAX repos (`A1-Platform-MAX`, `A1-SMB-HH-HY-MAX`, `A1-SMB-CRM-HY-MAX`, `A1-SMB-CRM-HY-MAX-web`) — once mirrored to `armosphera/`.
+
 
 ## Operational checks (re-run anytime)
 
