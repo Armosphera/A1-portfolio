@@ -14,6 +14,8 @@ Across 4 waves in this session, we delivered:
 - **Wave 2 (orchestration scaffolding):** 9 repos got `program.md` + `.orchestration/<roadmap>.md`. A1-Validator and sovereign got `scripts/spawn-worker.sh` (verified by end-to-end smoke-test).
 - **Wave 3 (first execution + releases + Issues):** 7 GitHub Releases cut (Wave 1+2 milestones). 6 sample Issues opened with full agent-ready bodies, ready to be picked up by Claude Code / Codex / MiniMax / Mavis / Hermes.
 - **Wave 4 (strategic gaps):** 3 TODO docs in `A1-portfolio` (CONTRIBUTING / RELEASE-PROCESS / PRODUCTS). First Karpathy eval lane `di-contract-frozen` in `A1-AI-Core` (6/6 PASS on real `index.js`, AST-based). A1-Validator license drift marked fixed in LICENSING.md.
+- **Wave 5 (CI wire-up):** `di-contract-frozen` lane wired into `A1-AI-Core` CI (3/3 jobs green). `A1-portfolio` drift-detection CI + `expected-repos.json` (15/15 PASS, catches real drift on every push). `A1-AI-Core` v0.3.0 release cut.
+- **Wave 6 (cross-cutting):** 2nd eval lane `fallback-models-stability` in `A1-AI-Core` (4/4 PASS, wired into CI — both lanes green). `DUAL-LICENSE-PREP.md` migration playbook. `docs/CROSS-REPO-COORDINATION.md` with 8 recipes.
 
 **Total commits this session:** ~35+ (Wave 1+2+3+4).
 **Total GitHub Releases this session:** 14 (7 initial + 7 Wave 1+2 milestones).
