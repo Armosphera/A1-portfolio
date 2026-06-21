@@ -20,7 +20,8 @@ This document is the canonical source of truth for licensing across the A1 produ
 | [`Armosphera/A1-Suite-Local-ANT`](../A1-Suite-Local-ANT) | private | Proprietary | `LicenseRef-Armosphera-Proprietary` | Productionized app shell. |
 | [`Armosphera/A1-AI-ERP-SBOS-MSTUDIO-sovereign`](../A1-AI-ERP-SBOS-MSTUDIO-sovereign) | private | Proprietary | `LicenseRef-Armosphera-Proprietary` | Air-gapped SBOSS. |
 | [`Armosphera/SBOS-A1-ERP`](../SBOS-A1-ERP) | private | Proprietary | `LicenseRef-Armosphera-Proprietary` | Open-core distribution of A1-ERP-HY (de-privatized, brand-neutral). |
-| [`Armosphera/WIP`](../WIP) | private | — | — | Empty scratch repo, no LICENSE — to be deleted. |
+| [`Armosphera/A1-portfolio`](../A1-portfolio) | public | Proprietary | `LicenseRef-Armosphera-Proprietary` | Meta-docs (licensing, architecture, security, contributing). |
+| [`Armosphera/a1-cross-link-sweep`](../a1-cross-link-sweep) | public | MIT | `MIT` | Cross-account link sweep tooling (Karpathy-eval infra). |
 
 ## Why "Proprietary" and not MIT
 
