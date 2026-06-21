@@ -25,5 +25,7 @@ Cross-repo documentation for the Armosphera A1 product family.
 | [`Armosphera/A1-Suite-Local-ANT`](../A1-Suite-Local-ANT) | Application |
 | [`Armosphera/A1-AI-ERP-SBOS-MSTUDIO-sovereign`](../A1-AI-ERP-SBOS-MSTUDIO-sovereign) | Application |
 | [`Armosphera/SBOS-A1-ERP`](../SBOS-A1-ERP) | Application |
+| [`Armosphera/A1-portfolio`](../A1-portfolio) | Meta-docs (this repo) |
+| [`Armosphera/a1-cross-link-sweep`](../a1-cross-link-sweep) | Tooling |
 
 Owned by **Armosphera LLC**. Contact: ops@a1-suite.local.
