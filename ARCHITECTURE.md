@@ -102,13 +102,45 @@ Each engine repo ships an `INTEGRATION.md` describing the vendor procedure. Apps
 - **Dependabot:** enabled across all 10 repos (npm + pip, weekly, monday 06:00). Vulnerability alerts + automated security fixes turned on.
 - **`SECURITY.md`:** installed in all 10 repos, links to the portfolio-wide policy in `A1-portfolio`.
 
-## What's unblocked now (next coding sprint, week 2 of the MAX roadmap)
+## What's unblocked now (week 2-3 of the MAX roadmap)
+
+### ✅ Phase 4 — workflow runtime: ROUTE WIRED
+
+- `apps/inventory/src/app/api/erp/workflow/route.ts` exposes 5 endpoints via Next.js:
+  - `POST /api/erp/workflow/parse` — validate YAML, returns `WorkflowDefinition` (422 on parse failure)
+  - `PUT  /api/erp/workflow/preview` — start preview-first run (ADR §D7 — no `effect: write` tools run)
+  - `PATCH /api/erp/workflow/confirm` — approve previewed run, transition to live. Per ADR §D2, the `x-actor-role`/`x-user-id` headers define the approver's principal; the run audit trail shows the human, not the agent.
+  - `DELETE /api/erp/workflow/cancel` — cancel queued/proposed run (throws `WORKFLOW_INVALID_STATE` for live/terminal runs).
+  - `GET /api/erp/workflow/runs?limit=N` — list runs for the org (capped 200).
+- Uses `InMemoryWorkflowRunStore` + `InMemoryAuditSink` + `ToolRegistry` singletons. Production wiring replaces with Postgres-backed adapters per ADR §D6.
+- All writes go through `withIdempotency()` (Phase 3 contract).
+- Branch: `karpathy/workflow-runtime` on both `SamStep74/A1-Suite-Local-MAX` and `Armosphera/A1-Suite-Local-MAX`.
+- Eval contract: `evals/karpathy/workflow-runtime.json` (successMetricValue=0).
+
+### Remaining (Phase 4 → production-ready)
+
+- Replace `InMemoryWorkflowRunStore` with Postgres-backed store.
+- Replace `InMemoryAuditSink` with `ErpAuditRepo.appendErpAuditEvent` from `packages/erp/src/repo.ts`.
+- Replace `ToolRegistry` with per-tenant scoped registry loaded from `packages/erp/src/agent/registry.ts`.
+- Add Next.js tests under `apps/inventory/src/app/api/erp/workflow/route.test.ts`.
+- Add Karpathy eval branch for the **agent layer** (Phase 5).
+
+### Still pending (Phases 5-6)
 
 - **HH migration** to MAX RBAC contract (`A1-SMB-HH-HY-MAX/docs/rbac-and-ux-migration.md`).
-- **Phase 4 — workflow runtime** (`packages/erp/src/workflow/`): parser, executor, approval-inbox, audit, run-store all present; needs orchestration wiring.
-- **Phase 5 — agent layer** (`packages/erp/src/agent/`): registry, model-adapter, policy, retrieval, structured-output all present; needs Finance Close integration.
-- **Phase 6 — Finance Close Assistant** (`packages/erp/src/finance-close/`): checklist, store, types present; needs Fastify route in `apps/inventory/src/app/api/finance-close/` + cockpit UI.
-- **Karpathy eval branches** for all phases: `karpathy/invoice-extractor-contract` (autoresearch-sboss, score 100/100) and `karpathy/erp-idempotency` (MAX, successMetricValue=0 met) are live.
+- **Phase 5 — agent layer** (`packages/erp/src/agent/`): registry, model-adapter, policy, retrieval, structured-output all present; needs Fastify/Next.js route + tool-perm gates wired.
+- **Phase 6 — Finance Close Assistant** (`packages/erp/src/finance-close/`): checklist, store, types present; needs cockpit UI in `apps/inventory/src/app/finance-close/`.
+
+### Karpathy eval branches (5 live, 1 new this session)
+
+| Branch | Repo | Eval | Status |
+|---|---|---|---|
+| `karpathy/invoice-extractor-contract` | `autoresearch-sboss` | Invoice field extraction (5 fields × 20 items) | ✅ 100/100 |
+| `karpathy/erp-idempotency` | `A1-Suite-Local-MAX` | Phase 3 idempotency wrapper | ✅ successMetricValue=0 |
+| `karpathy/workflow-runtime` | `A1-Suite-Local-MAX` | Phase 4 workflow runtime + route wiring | ✅ successMetricValue=0 |
+| `karpathy/rbac-contract` | `A1-ERP-HY` | RBAC permission matrix + auditor coverage | (pre-existing) |
+| `karpathy/egress-policy-contract-default` | `A1-Suite-Local-ANT` | Egress deny-by-default | (pre-existing) |
+| `karpathy/egress-policy-contract-public` | `A1-Suite-Local-ANT` | Egress public allowlist | (pre-existing) |
 
 
 ## Operational checks (re-run anytime)
