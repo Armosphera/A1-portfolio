@@ -265,3 +265,69 @@ The pattern is **reproducible for any multi-repo product family**.
 ### Verified: all planned phases exist on main
 
 Phase 3 (idempotency), Phase 4 (workflow runtime), Phase 5 (agent layer), Phase 6 (Finance Close), phase9-rbac — all implemented.
+
+
+## Wave 11 — 2026-06-21: HH migration executed + workflow/agent integration tests
+
+### HH RBAC migration (live execution on Postgres)
+
+Verified end-to-end on `a1maxverify-postgres-1:5432/a1_suite`:
+
+```
+rbac_roles: 5 (owner, admin, accountant, operator, viewer)
+rbac_permissions: 29 (MAX contract codes)
+rbac_role_permissions: 85 (owner=29, admin=28, accountant=9, operator=12, viewer=7)
+rbac_user_roles: 3 (test data: admin, owner, operator)
+rbac_audit: 3 (migration log)
+```
+
+Verified mapping (HH → MAX):
+- ADMIN → admin
+- CFO → owner (widening — MAX has no CFO role)
+- AR_CLERK → operator
+- CONTROLLER → accountant
+- 10 HH roles → 5 MAX roles (full mapping in docs/hh-to-max-rbac-mapping.md)
+
+### HH route migration pilot
+
+`src/modules/invoices/routes.ts` migrated to use `requirePermissionBridge` via the `RBR_ENABLED` feature flag:
+- `RBR_ENABLED` unset (default): legacy HH engine (no behavior change)
+- `RBR_ENABLED=1`: HH codes translated to MAX codes via rbac-bridge, enforced via rbac_user_roles + rbac_role_permissions
+
+All 9 requirePermission calls in invoices module swapped to feature-flag-guarded `guard()`. Same pattern can be applied to remaining 31 route files.
+
+### MAX integration tests (2 new files, ~20k bytes)
+
+| File | Tests | Coverage |
+|---|---|---|
+| workflow/integration.test.ts | 11 | parse → start → runLive → approval → complete, audit trail |
+| agent-integration.test.ts | 12 | runAgentWithDef end-to-end: policy, cost budget, trace, proposed actions |
+
+### Test coverage progression
+
+| Wave | Test files |
+|---|---|
+| Wave 10 start | 44 |
+| Wave 10 (BOM + stock-moves) | 47 |
+| Wave 10 (workflow + agent unit) | 52 |
+| Wave 10 (parser + registry) | 54 |
+| Wave 11 (integration) | **57** |
+
+### Commits (Wave 11)
+
+| SHA | Description |
+|---|---|
+| `cec8782` | test(agent): integration tests |
+| `e78d8db` | test(workflow): integration tests |
+| `2a9b25a` | eval(karpathy): workflow-runtime contract update |
+| `f4d09bf` | test(workflow): registry test suite |
+| `d9f1502` | test(workflow): parser test suite |
+
+### HH commits (Wave 11)
+
+| SHA | Description |
+|---|---|
+| `885328a` | feat(rbac): pilot invoices route + sync fresh types |
+| `84910d0` | test(rbac): bridge-middleware tests |
+| `cd18ee4` | feat(rbac): bridge middleware |
+| `0a01dd6` | feat(rbac): schema prisma (RbacRole etc) |
