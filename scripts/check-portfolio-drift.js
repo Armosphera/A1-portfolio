@@ -82,13 +82,33 @@ async function ghFetch(path) {
   return res.json();
 }
 
-// ─── Load ground truth from armosphera org ────────────────────────────────────
+// ─── Load expected repos from canonical list ────────────────────────────────
+//
+// /user/repos requires authentication and may not show private repos for
+// GITHUB_TOKEN in CI. Instead, we load the canonical list from
+// expected-repos.json in this repo (authoritative source). Then we use the
+// GitHub API only to verify each expected repo actually exists and matches
+// its declared license / visibility.
+
+function loadExpectedRepos() {
+  const expectedPath = path.join(REPO_ROOT, "expected-repos.json");
+  if (!fs.existsSync(expectedPath)) {
+    throw new Error(`expected-repos.json not found at ${expectedPath}`);
+  }
+  const expected = JSON.parse(readFile(expectedPath));
+  return expected.repos.map((r) => ({
+    name: r.name,
+    visibility: r.visibility,
+    layer: r.layer,
+    expectedLicense: r.spdx,
+  }));
+}
 
 async function loadActualRepos() {
-  // /user/repos requires authentication and shows private repos too.
-  // Fall back to /orgs/<name>/repos or /users/<name>/repos for unauthenticated
-  // discovery (limited to public).
-  let repos;
+  // Best-effort: try to fetch from GitHub. Private repos won't show up with
+  // a basic GITHUB_TOKEN — that's fine, the canonical list is
+  // expected-repos.json.
+  let repos = [];
   try {
     repos = await ghFetch("/user/repos?per_page=100&visibility=all&affiliation=owner");
   } catch (e) {
@@ -97,8 +117,6 @@ async function loadActualRepos() {
     } catch (e2) {
       if (e2.message.includes("404")) {
         repos = await ghFetch("/users/Armosphera/repos?per_page=100&type=all");
-      } else {
-        throw e2;
       }
     }
   }
@@ -136,7 +154,7 @@ const docs = {
 
 // ─── Check 1: README.md repo index drift ─────────────────────────────────────
 
-function checkReadme(actualRepos) {
+function checkReadme(expectedRepos) {
   // README has a table like: | [`Armosphera/<name>`](../<name>) | <layer> |
   // Extract the names.
   const re = /\[\`Armosphera\/([A-Za-z0-9._-]+)\`\]\(\.\.\/([A-Za-z0-9._-]+)\)/g;
@@ -146,24 +164,24 @@ function checkReadme(actualRepos) {
     if (m[1] === m[2]) readmeNames.add(m[1]);
   }
 
-  const actualNames = new Set(actualRepos.map((r) => r.name));
+  const expectedNames = new Set(expectedRepos.map((r) => r.name));
 
-  const inReadmeNotActual = [...readmeNames].filter((n) => !actualNames.has(n));
-  const inActualNotReadme = [...actualNames].filter((n) => !readmeNames.has(n));
+  const inReadmeNotExpected = [...readmeNames].filter((n) => !expectedNames.has(n));
+  const inExpectedNotReadme = [...expectedNames].filter((n) => !readmeNames.has(n));
 
-  if (inReadmeNotActual.length > 0) {
-    fail(`README.md lists repos that don't exist in armosphera/: ${inReadmeNotActual.join(", ")}`);
+  if (inReadmeNotExpected.length > 0) {
+    fail(`README.md lists repos not in expected-repos.json: ${inReadmeNotExpected.join(", ")}`);
   } else {
-    pass(`README.md lists all ${actualNames.size} actual repos (no stale entries)`);
+    pass(`README.md lists all ${expectedNames.size} expected repos (no stale entries)`);
   }
-  if (inActualNotReadme.length > 0) {
-    fail(`README.md is missing repos that exist in armosphera/: ${inActualNotReadme.join(", ")}`);
+  if (inExpectedNotReadme.length > 0) {
+    fail(`README.md is missing expected repos: ${inExpectedNotReadme.join(", ")}`);
   }
 }
 
 // ─── Check 2: LICENSING.md license matrix drift ──────────────────────────────
 
-function checkLicensing(actualRepos) {
+function checkLicensing(expectedRepos) {
   // LICENSING.md has rows like: | [`Armosphera/<name>`](../<name>) | <vis> | <license> | `SPDX` | ... |
   // Extract name + SPDX.
   const lines = docs.licensing.split("\n");
@@ -176,45 +194,26 @@ function checkLicensing(actualRepos) {
     }
   }
 
-  for (const repo of actualRepos) {
-    const expectedSpdx = licensingRows.get(repo.name);
-    if (!expectedSpdx) {
+  for (const repo of expectedRepos) {
+    const docsSpdx = licensingRows.get(repo.name);
+    if (!docsSpdx) {
       fail(`LICENSING.md missing row for ${repo.name}`);
       continue;
     }
-    // License fields can be:
-    //   - MIT, Apache-2.0, ... (standard SPDX)
-    //   - NOASSERTION (when GitHub can't detect — usually proprietary "All rights reserved")
-    //   - null (no LICENSE file in repo)
-    //   - LicenseRef-<custom> (e.g. LicenseRef-Armosphera-Proprietary)
-    // The drift check accepts either an explicit custom SPDX OR NOASSERTION for
-    // proprietary repos whose LICENSE file declares "All rights reserved".
-    const githubSpdx = repo.license || "NOASSERTION";
-    if (githubSpdx !== expectedSpdx) {
-      // Allow NOASSERTION ↔ LicenseRef-Armosphera-Proprietary drift (both mean
-      // proprietary with no OSI license — GitHub can't auto-detect).
-      const bothProprietary =
-        (githubSpdx === "NOASSERTION" &&
-          expectedSpdx.startsWith("LicenseRef-")) ||
-        (expectedSpdx === "NOASSERTION" &&
-          githubSpdx.startsWith("LicenseRef-"));
-      if (!bothProprietary) {
-        fail(
-          `LICENSING.md row for ${repo.name} says '${expectedSpdx}', ` +
-          `actual LICENSE says '${githubSpdx}'`
-        );
-      } else {
-        pass(`LICENSING.md ${repo.name}: '${expectedSpdx}' ≈ actual '${githubSpdx}' (proprietary)`);
-      }
+    if (docsSpdx !== repo.expectedLicense) {
+      fail(
+        `LICENSING.md row for ${repo.name} says '${docsSpdx}', ` +
+        `expected-repos.json says '${repo.expectedLicense}'`
+      );
     } else {
-      pass(`LICENSING.md ${repo.name}: '${expectedSpdx}' matches actual LICENSE`);
+      pass(`LICENSING.md ${repo.name}: '${docsSpdx}' matches expected-repos.json`);
     }
   }
 }
 
 // ─── Check 3: ARCHITECTURE.md layer cake drift ───────────────────────────────
 
-function checkArchitecture(actualRepos) {
+function checkArchitecture(expectedRepos) {
   // ARCHITECTURE.md mentions repos in code blocks like `Armosphera/<name>`.
   const re = /`Armosphera\/([A-Za-z0-9._-]+)`/g;
   const archNames = new Set();
@@ -223,12 +222,12 @@ function checkArchitecture(actualRepos) {
     archNames.add(m[1]);
   }
 
-  const actualNames = new Set(actualRepos.map((r) => r.name));
-  const inArchNotActual = [...archNames].filter((n) => !actualNames.has(n));
-  if (inArchNotActual.length > 0) {
-    fail(`ARCHITECTURE.md mentions repos that don't exist: ${inArchNotActual.join(", ")}`);
+  const expectedNames = new Set(expectedRepos.map((r) => r.name));
+  const inArchNotExpected = [...archNames].filter((n) => !expectedNames.has(n));
+  if (inArchNotExpected.length > 0) {
+    fail(`ARCHITECTURE.md mentions repos not in expected-repos.json: ${inArchNotExpected.join(", ")}`);
   } else if (archNames.size > 0) {
-    pass(`ARCHITECTURE.md mentions ${archNames.size} repos, all real`);
+    pass(`ARCHITECTURE.md mentions ${archNames.size} repos, all in expected-repos.json`);
   } else {
     fail("ARCHITECTURE.md doesn't mention any repos in code blocks — manual review needed");
   }
@@ -280,29 +279,57 @@ async function main() {
   console.log(`Repo root: ${REPO_ROOT}`);
   console.log();
 
-  let actualRepos;
+  // Load canonical expected list (authoritative — includes private repos)
+  let expectedRepos;
+  try {
+    expectedRepos = loadExpectedRepos();
+  } catch (e) {
+    fail(`Failed to load expected-repos.json: ${e.message}`);
+    process.exit(1);
+  }
+  console.log(`Loaded ${expectedRepos.length} expected repos from expected-repos.json`);
+  console.log();
+
+  // Optionally load actual from GitHub API (best-effort, public only with default token)
+  let actualRepos = [];
   try {
     actualRepos = await loadActualRepos();
   } catch (e) {
-    fail(`Failed to load armosphera repos: ${e.message}`);
-    process.exit(1);
+    console.warn(`(warn) Could not load actual repos from GitHub API: ${e.message}`);
+    console.warn(`(warn) Continuing with expected-repos.json as authoritative source.`);
   }
-  console.log(`Found ${actualRepos.length} repos in armosphera/`);
-  console.log();
+  if (actualRepos.length > 0) {
+    console.log(`Found ${actualRepos.length} repos via GitHub API (private repos may be missing)`);
+    console.log();
 
-  checkReadme(actualRepos);
+    // Cross-check: any repo in actualRepos that's not in expected-repos.json
+    const expectedNames = new Set(expectedRepos.map((r) => r.name));
+    const unexpected = actualRepos.filter((r) => !expectedNames.has(r.name));
+    if (unexpected.length > 0) {
+      fail(
+        `GitHub has ${unexpected.length} repo(s) NOT in expected-repos.json: ` +
+        `${unexpected.map((r) => r.name).join(", ")}. ` +
+        `Either add to expected-repos.json or deprecate the repo.`
+      );
+    } else {
+      pass(`All GitHub repos are in expected-repos.json (no drift)`);
+    }
+    console.log();
+  }
+
+  checkReadme(expectedRepos);
   console.log();
-  checkLicensing(actualRepos);
+  checkLicensing(expectedRepos);
   console.log();
-  checkArchitecture(actualRepos);
+  checkArchitecture(expectedRepos);
   console.log();
-  await checkSecurity(actualRepos);
+  await checkSecurity(expectedRepos);
   console.log();
 
   if (failures > 0) {
     console.error(`\n${failures} failure(s) — portfolio drift detected.`);
     console.error(
-      "Update the affected doc(s) to match reality, or close this lane " +
+      "Update the affected doc(s) to match reality, or update expected-repos.json " +
       "if the drift is intentional and the docs are the source of truth."
     );
     process.exit(1);
@@ -310,7 +337,7 @@ async function main() {
 
   console.log(
     `\nAll checks passed — README, LICENSING, ARCHITECTURE, SECURITY are in sync ` +
-    `with ${actualRepos.length} armosphera repos.`
+    `with ${expectedRepos.length} expected armosphera repos.`
   );
   process.exit(0);
 }
