@@ -82,6 +82,18 @@ async function ghFetch(path) {
   return res.json();
 }
 
+// Robust wrapper: try ghFetch first; fall back to `gh api` shell command.
+// `gh api` uses the local auth and sometimes works where fetch doesn't
+// (e.g. CI runners with firewall / DNS issues to api.github.com).
+async function ghFetchRobust(path) {
+  try {
+    return await ghFetch(path);
+  } catch (e) {
+    const fallback = execGh(`api ${path.replace(/^\//, "")}`);
+    return JSON.parse(fallback);
+  }
+}
+
 // ─── Load expected repos from canonical list ────────────────────────────────
 //
 // /user/repos requires authentication and may not show private repos for
@@ -292,12 +304,12 @@ async function checkDependabot(expectedRepos) {
     let hasDependabot = false;
 
     try {
-      const dep = await ghFetch(`/repos/Armosphera/${repo.name}/contents/.github/dependabot.yml`);
+      const dep = await ghFetchRobust(`/repos/Armosphera/${repo.name}/contents/.github/dependabot.yml`);
       if (dep && dep.name) hasDependabot = true;
     } catch (e) {
       // Try the legacy path
       try {
-        const wf = await ghFetch(`/repos/Armosphera/${repo.name}/contents/.github/workflows/dependabot.yml`);
+        const wf = await ghFetchRobust(`/repos/Armosphera/${repo.name}/contents/.github/workflows/dependabot.yml`);
         if (wf && wf.name) hasDependabot = true;
       } catch (e2) {
         // Neither found
