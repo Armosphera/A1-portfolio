@@ -1,7 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft-07/schema",
   "$comment": "Canonical list of all armosphera repos. Used by scripts/check-portfolio-drift.js to validate README.md / LICENSING.md / ARCHITECTURE.md / SECURITY.md. Update this file when adding or deprecating a repo. The drift check compares against this file rather than the GitHub API for the full repo list (so private repos are also validated, even when the CI GITHUB_TOKEN can't see them).",
-
   "repos": [
     {
       "name": "autoresearch-sboss",
@@ -77,6 +76,34 @@
       "name": "a1-cross-link-sweep",
       "visibility": "public",
       "layer": "Tooling",
+      "license": "Proprietary",
+      "spdx": "LicenseRef-Armosphera-Proprietary"
+    },
+    {
+      "name": "A1-Platform-MAX",
+      "visibility": "private",
+      "layer": "Application",
+      "license": "Proprietary",
+      "spdx": "LicenseRef-Armosphera-Proprietary"
+    },
+    {
+      "name": "A1-SMB-CRM-HY-MAX",
+      "visibility": "private",
+      "layer": "Application",
+      "license": "Proprietary",
+      "spdx": "LicenseRef-Armosphera-Proprietary"
+    },
+    {
+      "name": "A1-SMB-CRM-HY-MAX-web",
+      "visibility": "public",
+      "layer": "Application",
+      "license": "Proprietary",
+      "spdx": "LicenseRef-Armosphera-Proprietary"
+    },
+    {
+      "name": "A1-SMB-HH-HY-MAX",
+      "visibility": "private",
+      "layer": "Application",
       "license": "Proprietary",
       "spdx": "LicenseRef-Armosphera-Proprietary"
     }

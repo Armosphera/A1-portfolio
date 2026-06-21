@@ -13,7 +13,10 @@ Cross-repo documentation for the Armosphera A1 product family.
 | [docs/PRODUCTS.md](./docs/PRODUCTS.md) | Naming matrix: which repo is canonical for X. |
 | [docs/CROSS-REPO-COORDINATION.md](./docs/CROSS-REPO-COORDINATION.md) | 8 coordination recipes for cross-repo changes (Wave 6). |
 | [docs/REPO-TEMPLATE.md](./docs/REPO-TEMPLATE.md) | 9-step recipe for adding new A1 repos (Wave 7). |
+| [docs/KARPATHY-EVAL-INVENTORY.md](./docs/KARPATHY-EVAL-INVENTORY.md) | 13+ Karpathy eval lanes across 8 repos (Wave 8). |
+| [docs/SESSION-LOG.md](./docs/SESSION-LOG.md) | Canonical chronological log of the AI-coder enablement session (Wave 9). |
 | [DUAL-LICENSE-PREP.md](./DUAL-LICENSE-PREP.md) | AGPL-3.0 + Commercial migration playbook (Wave 6). |
+| [CONTRIBUTORS.md](./CONTRIBUTORS.md) | Meta-level contributor list (Wave 7). |
 
 ## Repo index
 
@@ -29,6 +32,10 @@ Cross-repo documentation for the Armosphera A1 product family.
 | [`Armosphera/A1-AI-ERP-SBOS-MSTUDIO-sovereign`](../A1-AI-ERP-SBOS-MSTUDIO-sovereign) | Application |
 | [`Armosphera/SBOS-A1-ERP`](../SBOS-A1-ERP) | Application |
 | [`Armosphera/A1-portfolio`](../A1-portfolio) | Meta-docs (this repo) |
+| [`Armosphera/A1-Platform-MAX`](../A1-Platform-MAX) | Application (mirror) |
+| [`Armosphera/A1-SMB-CRM-HY-MAX`](../A1-SMB-CRM-HY-MAX) | Application (mirror) |
+| [`Armosphera/A1-SMB-CRM-HY-MAX-web`](../A1-SMB-CRM-HY-MAX-web) | Application (web) |
+| [`Armosphera/A1-SMB-HH-HY-MAX`](../A1-SMB-HH-HY-MAX) | Application (mirror) |
 | [`Armosphera/a1-cross-link-sweep`](../a1-cross-link-sweep) | Tooling |
 
 Owned by **Armosphera LLC**. Contact: ops@a1-suite.local.
