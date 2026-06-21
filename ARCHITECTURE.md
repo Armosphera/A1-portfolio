@@ -214,10 +214,23 @@ Production wiring: replace the page's `setTimeout`-based mock workflow calls wit
 
 Per the §7 rollout plan, this is the engine + 2 smallest-blast-radius modules. Remaining modules (`gl/`, `invoices/`, `bills/`, `auth/`, `audit/`) are follow-ups — each is the same pattern (additive preHandler + cutover after 30-day parity).
 
+### ✅ HH module-by-module refactor — all 5 routes + mapping shipped
+
+- `SamStep74/A1-SMB-HH-HY-MAX/karpathy/hh-rbac-engine` branch (mirrored to `Armosphera/A1-SMB-HH-HY-MAX`):
+  - `src/middleware/max-rbac-mapping.ts` — 23-row HH-to-MAX permission mapping table (the single source of truth for the §3 mapping). `maxPermFor()` is the bridge function.
+  - `src/modules/gl/routes.ts` — dual preHandler on `POST /api/gl/accounts` (legacy `gl:write` + MAX `finance.report.create`).
+  - `src/modules/invoices/routes.ts` — dual preHandler on `POST /api/invoices` (`invoice:write` → `hh.invoice.send`).
+  - `src/modules/bills/routes.ts` — dual preHandler on `POST /api/bills` (`bill:write` → `hh.bill.write`).
+  - `src/modules/audit/routes.ts` — dual preHandler on `GET /api/audit` (`audit:read` → `audit.read`).
+  - `src/modules/auth/routes.ts` — imports added (no write path migrated; auth's signup/login/refresh flow uses rate-limit + Argon2id, not RBAC).
+  - `test/unit/max-rbac-mapping.test.ts` — 4 cases: covers all 23 legacy codes, spot-checks mappings, defensive unknown-string passthrough, regex shape check.
+  - `evals/karpathy/hh-rbac-engine.json` — contract updated to run both `rbac-engine.test.ts` AND `max-rbac-mapping.test.ts`.
+
+**Migration §5 status: 7/9 TODO items done.** The remaining 2 (integration tests, drop legacy after 30-day parity) are deferred to the cutover phase per §7.
+
 ### Still pending
 
 - **MAX vs ANT vs SBOS-A1-ERP product matrix decision** (still open).
-- **HH remaining modules** (gl, invoices, bills, auth, audit) — sequential after engine + tax + payroll.
 
 ### Karpathy eval branches (5 live, 1 new this session)
 
