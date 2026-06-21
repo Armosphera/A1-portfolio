@@ -16,6 +16,7 @@ Across 4 waves in this session, we delivered:
 - **Wave 4 (strategic gaps):** 3 TODO docs in `A1-portfolio` (CONTRIBUTING / RELEASE-PROCESS / PRODUCTS). First Karpathy eval lane `di-contract-frozen` in `A1-AI-Core` (6/6 PASS on real `index.js`, AST-based). A1-Validator license drift marked fixed in LICENSING.md.
 - **Wave 5 (CI wire-up):** `di-contract-frozen` lane wired into `A1-AI-Core` CI (3/3 jobs green). `A1-portfolio` drift-detection CI + `expected-repos.json` (15/15 PASS, catches real drift on every push). `A1-AI-Core` v0.3.0 release cut.
 - **Wave 6 (cross-cutting):** 2nd eval lane `fallback-models-stability` in `A1-AI-Core` (4/4 PASS, wired into CI — both lanes green). `DUAL-LICENSE-PREP.md` migration playbook. `docs/CROSS-REPO-COORDINATION.md` with 8 recipes.
+- **Wave 7 (portfolio polish):** `REPO-TEMPLATE.md` (9-step recipe for adding new A1 repos). `CONTRIBUTORS.md` (meta-level contributor list). 4 new mirror repos registered in `expected-repos.json`. Drift check extended with Dependabot config check + `ghFetchRobust` fallback (handles CI auth issues).
 
 **Total commits this session:** ~35+ (Wave 1+2+3+4).
 **Total GitHub Releases this session:** 14 (7 initial + 7 Wave 1+2 milestones).
@@ -27,7 +28,7 @@ Across 4 waves in this session, we delivered:
 
 | Repo | AGENTS.md | program.md | .orchestration/ | spawn-worker.sh | Releases | Last CI |
 |---|---|---|---|---|---|---|
-| **autoresearch-sboss** | ✅ v0.2.0 | ✅ 2 program.md | ✅ examples/ | — | ✅ v0.2.0 | 🟢 green |
+| **autoresearch-sboss** | ✅ v0.3.0 | ✅ 2 program.md | ✅ docs/ARCHITECTURE.md + .orchestration/WORKFLOW.md | — | ✅ v0.3.0 | 🟢 green |
 | **A1-Validator** | ✅ v0.2.0 | ✅ | ✅ validator-port-queue (23 rows) | ✅ verified | ✅ v0.2.0 | 🟡 pre-existing |
 | **A1-Localization-AM** | ✅ v1.1.0 | ✅ | ✅ engine-roadmap | — | ✅ v1.1.0 | 🟢 green |
 | **A1-Localization-RU** | ✅ v0.2.0 | ✅ | ✅ engine-roadmap | — | ✅ v0.2.0 | 🟢 green |
@@ -148,27 +149,7 @@ Documented as future work, NOT regressions from this session:
 
 ---
 
-## Wave 6 subagent contribution + remediation
-
-The Wave 6 AI-coder subagent dispatched to autoresearch-sboss surfaced a real
-correctness issue in our STATE.md: my original Wave 1 commit (`AGENTS.md`) and
-Wave 2 commits (`.orchestration/`) for autoresearch-sboss **did not persist**
-to the current `main`. Likely cause: the repo had a parallel branch where
-upstream development was happening (e.g. `ant/main` per HANDOFF.md in ANT),
-and the Wave 1/2 commits landed against a stale view.
-
-**Remediation in Wave 6:**
-
-1. Subagent wrote `docs/ARCHITECTURE.md` (152 lines) — applied via commit `84a0b3f`.
-2. Re-applied `AGENTS.md` (Wave 1) and `.orchestration/WORKFLOW.md` (Wave 2) via
-   commit `1ae026e`.
-3. Cut `v0.3.0` with accurate release notes documenting the gap.
-
-**Lesson:** when a repo has active development on parallel branches, commits
-to `main` may not land cleanly. The right way is to PR against `main` rather
-than direct push, and verify with `gh api repos/.../contents/` after.
-
-## Open Wave 7+ candidates (NOT done in this session)
+## Open Wave 5+ candidates (NOT done in this session)
 
 These were identified but not executed:
 
