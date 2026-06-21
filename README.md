@@ -30,9 +30,9 @@ This repo ships a portfolio-wide health check: [`scripts/health.sh`](./scripts/h
 
 It verifies four invariants against the live GitHub API:
 
-1. Repo count + visibility split (10 / 6 public / 4 private)
+1. Repo count + visibility split (11 / 7 public / 4 private)
 2. `LICENSE` file present in every portfolio repo
-3. 22-file cross-account sweep — no `SamStep74` refs in `autoresearch-sboss/examples/*/program.md`
+3. 22-file cross-account sweep — via [`a1-cross-link-sweep`](https://github.com/Armosphera/a1-cross-link-sweep), a Karpathy-pattern autoresearch harness. Exits 0 when all 22 `autoresearch-sboss/examples/*/program.md` files point at the right source repo.
 4. Dependabot + `SECURITY.md` coverage across all repos
 
 Run it locally:
