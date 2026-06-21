@@ -23,3 +23,27 @@ Cross-repo documentation for the Armosphera A1 product family.
 | [`Armosphera/SBOS-A1-ERP`](../SBOS-A1-ERP) | Application |
 
 Owned by **Armosphera LLC**. Contact: ops@a1-suite.local.
+
+## Health check
+
+This repo ships a portfolio-wide health check: [`scripts/health.sh`](./scripts/health.sh).
+
+It verifies four invariants against the live GitHub API:
+
+1. Repo count + visibility split (10 / 6 public / 4 private)
+2. `LICENSE` file present in every portfolio repo
+3. 22-file cross-account sweep — no `SamStep74` refs in `autoresearch-sboss/examples/*/program.md`
+4. Dependabot + `SECURITY.md` coverage across all repos
+
+Run it locally:
+
+```bash
+gh auth switch --user Armosphera
+./scripts/health.sh
+```
+
+It is also wired as a **weekly GitHub Actions cron** (`.github/workflows/health.yml`, Mondays 08:00 UTC).
+On drift it auto-opens a labelled issue with the failing log and a "Suggested fixes" checklist.
+
+Detailed one-liners for each check live in [`ARCHITECTURE.md` § Operational checks](./ARCHITECTURE.md#operational-checks-re-run-anytime).
+
