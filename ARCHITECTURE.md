@@ -138,22 +138,17 @@ Expected: every line ends in `LICENSE`.
 
 ### 3. 22-file cross-account sweep — all program.md files clean
 
+The sweep harness is now a standalone CLI: [`Armosphera/a1-cross-link-sweep`](https://github.com/Armosphera/a1-cross-link-sweep).
+It clones on first run, caches at `/tmp/a1-clx-${CLX_VERSION:-main}`, and reuses on subsequent runs.
+
 ```bash
-for d in hhvh vat-return vat-return-form payroll-am chart-of-accounts-am \
-         phone-am regions-am einvoice-am ru-identifiers phone-ru \
-         ru-einvoice payroll-ru regions-ru chart-of-accounts-ru vat-ru \
-         model-policy chat-client settings-store model-catalog \
-         supplemental-sources open-notebook product-research; do
-  count=$(curl -s -H "$AUTH" \
-    "https://api.github.com/repos/Armosphera/autoresearch-sboss/contents/examples/$d/program.md" \
-    | jq -r '.content // ""' | base64 -d 2>/dev/null \
-    | grep -c "SamStep74\|samstep74")
-  printf "%-25s %s\n" "$d" "$count"
-done
+git clone --depth 1 --branch main \
+  https://github.com/Armosphera/a1-cross-link-sweep.git /tmp/a1-clx-main
+/tmp/a1-clx-main/a1-clx eval     # → score: 22 / 22 | elapsed: ~10s, exit 0
+/tmp/a1-clx-main/a1-clx sweep    # commits any drift back to canonical refs
 ```
 
-Expected: all 22 lines show `0`. The Karpathy-loop `examples/cross-link-sweep/eval.py`
-is the canonical version of this check — it also computes the 0-22 score and exits 0 on full pass.
+The portfolio `scripts/health.sh` wraps this as check #3 — see top of file.
 
 ### 4. Dependabot + SECURITY.md + vulnerability-alerts coverage
 
