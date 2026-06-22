@@ -650,3 +650,64 @@ workarounds (web UI / PAT / gh auth refresh).
 - Watchdog: 5 OK entries in /tmp/hh-bridge-watchdog.log
 - Cross-check report: portfolio/docs/BRIDGE-CROSSCHECK-HH-HY-vs-MAX.md updated
 - Grafana dashboard: portfolio/docs/grafana/rbac-bridge-hh-hy-dashboard.json
+
+
+## Wave 16 — 2026-06-22 10:40: Ops tooling + load testing (third autonomous run)
+
+### What was added
+
+**Load test:** `ops/loadtest-bridge.sh`
+- 200 requests simulating 1h of traffic
+- Distribution: 80% reads / 15% writes / 5% admin
+- Result: 200/200 success, 0 failures
+- All responses match expected codes (200, 201, 400, 404)
+
+**Status snapshot tool:** `ops/bridge-status.sh`
+- Generates `/tmp/hh-bridge-status.json` with current state
+- Schema: service, bridge, metrics, tests, alerts
+- Auto-updated by watchdog (every 30 min) or run manually
+- Includes uptime_seconds, running, enabled, counter totals
+
+**Watchdog update:**
+- Now also writes status file after each check
+- Last run output: `OK: bridge alive, 278 requests recorded, 35880 s uptime`
+
+**Operations runbook:** `RUNBOOK.md` (4.8 KB)
+- Service inventory table
+- Quick health check one-liner
+- State snapshot usage
+- 5 common failure modes with fixes
+- Rollback procedures (bridge mode + pre-bridge code)
+- Stress testing instructions
+- Karpathy cron push instructions
+- Escalation contacts
+
+### Test coverage
+
+34/34 tests passing (29 + 5 new ops script tests):
+- ops script executable bit
+- ops script bash syntax
+- RUNBOOK.md key sections
+- watchdog syntax
+
+### Final state
+
+- Server: PID 49865, running for ~10h
+- Bridge: enabled, 278 requests recorded
+- Tests: 34/34 passing
+- Watchdog: cron every 30 min, log shows 19+ OK entries
+- Load test: 200/200 success
+- Status file: /tmp/hh-bridge-status.json (auto-updated)
+
+### Git history
+
+```
+... (3 new commits this wave)
+ops: load test + status tool + runbook (34 tests)
+```
+
+### What's NOT in this run
+
+- Karpathy workflow push: still blocked on OAuth `workflow` scope
+- Live deny-case test: requires password-set flow for viewer (not yet supported in HH-HY API)
+  - Covered by 8 unit tests instead
