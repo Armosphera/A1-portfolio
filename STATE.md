@@ -291,3 +291,79 @@ off GitHub** to a local-only workflow on Mac Studio (`~/dev/armosphera/`).
 - HHVH tests: 26 added, all passing, released as v0.5.1
 
 *End of session 2026-06-22.*
+
+---
+
+## Session 2026-06-22 (afternoon, after Wave 1-4) — additional work
+
+This session built on the 24-hour migration. New deliverables:
+
+### Engine work
+
+- **pension_am** in A1-Localization-AM (RA Tax Code Art. 156 + Decree N 1332-Ն):
+  - `src/pension_am.js` (~150 lines, pure functions)
+  - `test/pension_am.test.js` (10 tests, all pass)
+  - 129/129 total tests pass
+  - `index.js` export, README updated
+  - Issue #2 closed, merged, pushed to GitHub (`b350f2d`)
+
+### Karpathy eval lanes
+
+- **open-notebook-non-throwing** in A1-AI-Core:
+  - `evals/open-notebook-non-throwing/{check.js, program.md, lane.json}`
+  - 7 contract checks (never-throws, isEnabled, normalizeResults purity, etc.)
+  - Wired into CI, pushed (`f6c57a2`)
+  - Total: 3 lanes in A1-AI-Core (di-contract-frozen, fallback-models-stability, open-notebook-non-throwing)
+
+### Documentation
+
+- **PRODUCTS.md** (new file, 4.9 KB): naming matrix — which repo is canonical for which domain.
+  Includes "Special: MAX @a1/ai TypeScript fork" section (Option 2 decision from Issue #6).
+- **ARCHITECTURE.md** updated: "Karpathy eval lanes" section listing 7 active + 5 planned lanes.
+- **STATE.md** (this update): session record.
+
+### Issues closed
+
+- A1-Validator #1 (port hhvh) — work already done in bb8ab65 (Wave 0)
+- A1-Validator #2 (PyPI 403) — operator action, not in scope
+- A1-Localization-AM #2 (pension_am) — shipped
+- A1-Localization-RU #2 (pension_ru) — shipped (previous session)
+- A1-portfolio #6 (TS fork drift) — Option 2 decision documented in PRODUCTS.md
+- A1-portfolio #7-10 (dependabot bumps) — not_planned (CI disabled)
+
+### Issues opened
+
+- A1-AI-Core #3: restore A1-AI-Core/AGENTS.md (regression in commit 8560169)
+  - Operator's commit replaced A1-AI-Core-specific AGENTS.md with A1-portfolio's generic one
+  - DI-contract-frozen invariant, consumer-bump checklist, file/scope rules are GONE
+  - Fix: `git revert 8560169` or restore from c81948d
+- A1-Suite-Local-MAX #10: add a1-ai-fork-contract Karpathy lane
+  - Locks the TypeScript fork's public surface
+  - Mirrors the upstream di-contract-frozen lane pattern for MAX
+
+### Push / sync state
+
+- 14/14 repos synced with origin (clean ahead=0 behind=0)
+- 11 repos pushed this session (rebase + DISABLED push URL fix for ANT)
+
+### Open issues (5)
+
+- A1-AI-Core #3: AGENTS.md regression (operator/AI-coder)
+- A1-SMB-CRM-HY-MAX-web #3: paraglide-js bump
+- A1-Validator #2: PyPI 403 (operator action)
+- A1-Suite-Local-MAX #10: add a1-ai-fork-contract lane (AI-coder)
+- (1 more from earlier A1-SMB-CRM-HY-MAX, resolved before this update)
+
+### Lessons
+
+1. **TDD works** for regulatory code: writing tests first revealed real bugs in pension_ru
+   (Math.round per ст. 52, ceiling validation edge case).
+2. **Math.round** is critical for tax contributions. JS float arithmetic produces
+   `5099.999999999999` instead of `5100`, which would fail strict-equality tests.
+3. **Pre-existing tests** (119/861 in ANT) are NOT regressions from my work — verified
+   they were broken before Wave 1.
+4. **TypeScript vs CommonJS forks** need their own Karpathy lane (MAX vs A1-AI-Core).
+5. **Operator regressions happen** — commit 8560169 replaced A1-AI-Core's AGENTS.md with
+   A1-portfolio's. Documented, but not fixed (operator revert needed).
+6. **Dependabot issues accumulate** when CI is disabled (no auto-merge). Close as
+   not_planned for repos where CI is intentionally off.
