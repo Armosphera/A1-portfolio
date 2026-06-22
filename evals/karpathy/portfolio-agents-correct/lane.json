@@ -1,0 +1,26 @@
+{
+  "name": "portfolio-agents-correct",
+  "version": "1.0.0",
+  "module": "all armosphera/* repos",
+  "exports_required": ["AGENTS.md in each engine/application/reference repo"],
+  "behaviors": [
+    "A1-portfolio/AGENTS.md is the unique source (identical elsewhere = regression)",
+    "All Engine repos must have repo-specific AGENTS.md",
+    "All Application repos must have repo-specific AGENTS.md",
+    "All Reference repos (autoresearch-sboss) must have repo-specific AGENTS.md",
+    "Mirror repos (A1-Platform-MAX, A1-SMB-*) are exempt (read-only clones)",
+    "Tooling repos (a1-cross-link-sweep) must also have repo-specific AGENTS.md"
+  ],
+  "frozen_as_of": "2026-06-22",
+  "rationale": "AGENTS.md regression = lost charter (TDD, sovereignty, contract). Three such regressions already happened in 2026-06-22 (A1-AI-Core, sovereign, autoresearch-sboss). Lane prevents future regressions.",
+  "consumers": ["A1-portfolio (registry)", "all armosphera/* repos"],
+  "regressions_detected_on_first_run": [
+    "A1-Localization-AM (Engine)",
+    "A1-Localization-RU (Engine)",
+    "A1-Validator (Engine)",
+    "A1-Suite-Local-ANT (Application)",
+    "SBOS-A1-ERP (Application)",
+    "A1-Suite-Local-MAX (Application, missing)",
+    "a1-cross-link-sweep (Tooling)"
+  ]
+}

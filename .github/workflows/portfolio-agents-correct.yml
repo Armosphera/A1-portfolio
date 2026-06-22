@@ -1,0 +1,55 @@
+name: portfolio-agents-correct
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  schedule:
+    - cron: "30 6 * * 1"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  issues: write
+
+jobs:
+  agents-correct:
+    if: false  # disabled 2026-06-21 — repo is private, local CI in ~/dev/armosphera/
+    name: Check AGENTS.md across armosphera/* repos
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout A1-portfolio
+        uses: actions/checkout@v4
+
+      - name: Clone sibling repos
+        run: |
+          mkdir -p ../armosphera/src
+          for repo in A1-AI-Core A1-AI-ERP-SBOS-MSTUDIO-sovereign A1-Localization-AM A1-Localization-RU A1-Suite-Local-ANT A1-Suite-Local-MAX A1-Validator SBOS-A1-ERP autoresearch-sboss a1-cross-link-sweep; do
+            git clone --depth 1 "https://github.com/Armosphera/${repo}.git" "../armosphera/src/${repo}" || true
+          done
+
+      - name: Setup Node 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      - name: Run portfolio-agents-correct check
+        env:
+          HOME: ${{ github.workspace }}
+        run: node evals/karpathy/portfolio-agents-correct/check.js
+
+      - name: Open issue on regression
+        if: failure()
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          today=$(date -u +%Y-%m-%d)
+          title="[portfolio-agents-correct] AGENTS.md regression — ${today}"
+          body="AGENTS.md regression detected. One or more engine/app repos has AGENTS.md identical to A1-portfolio/AGENTS.md. Run: ${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}. Fix: restore the repo-specific AGENTS.md from the original commit (search git log for 'docs: add AGENTS.md')."
+          existing=$(gh api -X GET "repos/Armosphera/A1-portfolio/issues?state=open&labels=portfolio-agents-correct&per_page=1" -q '.[0].number // empty')
+          if [ -n "$existing" ]; then
+            gh issue comment "$existing" --repo Armosphera/A1-portfolio --body "Re-failed at ${today} (run ${GITHUB_RUN_ID})"
+          else
+            gh issue create --repo Armosphera/A1-portfolio --title "$title" --body "$body" --label portfolio-agents-correct
+          fi
