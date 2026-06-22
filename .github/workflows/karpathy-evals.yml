@@ -106,7 +106,7 @@ jobs:
 
     steps:
       - name: Checkout A1-portfolio (for runner context)
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
