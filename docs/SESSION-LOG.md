@@ -788,3 +788,57 @@ b583f5c docs: update cross-check with ops tooling + Karpathy workaround notes
 - `BRIDGE-CROSSCHECK.md` — HH-HY vs MAX
 - `README.md` — bridge mode docs
 - `ops/pending-workflow-push/` — Karpathy cron (manual push needed)
+
+
+## Wave 18 — 2026-06-22 14:30: All 4 auth gates wrapped + full audit (5th autonomous run)
+
+### Major milestone: 100% auth gate coverage
+
+ALL 4 auth gates in server.js now have bridge wrappers:
+
+| Gate | Wrapper | Callsites | Records |
+|---|---|---|---|
+| `requireSession(req)` | `bridgeRequireSession` | 1 | 401 unauthorized attempts |
+| `requireAdmin(req)` | `bridgeRequireAdmin` | 7 | admin token checks |
+| `requireOwner(role)` | `bridgeRequireOwner` | 7 | tenant owner checks |
+| viewer write check | `bridgeRequireEditor` | 1 | viewer write gate |
+
+### Live verification (all deny paths)
+
+```
+401 no token          → denied{required=viewer,role=none} 1
+503 admin misconfig   → denied{required=admin,role=none} 1
+200 owner GET         → allowed{required=editor,role=owner} 1
+```
+
+### Bugs found and fixed
+
+1. **Infinite recursion**: bridgeRequireSession called itself (regex replaced the call inside the wrapper too)
+   - Fixed by patching `bridgeRequireSession(req)` → `requireSession(req)` inside wrapper
+2. **Role label "none" vs null**: "none" string was passing role checks (not null)
+   - Fixed: pass `null` instead of `"none"` to bridgeRequireRole
+
+### Test coverage
+
+- Bridge tests: **43/43** passing (+2 session wrapping + 4-gate regression)
+- Full project: **405/405** passing (0 regressions from bridge changes)
+- Load test: **200/200** success (second run, after server restart)
+
+### New ops tools
+
+- `ops/trend-metrics.sh`: trend analysis with table output + rate calculation
+
+### Git history (2 new commits)
+
+```
+727b75a  feat(bridge): wrap requireSession + fix deny recording (43 tests)
+701fd3f  feat(bridge): wrap requireAdmin + metrics trend tool (41 tests)
+```
+
+### Final state
+
+- Server: PID 37244, RBR_ENABLED=1
+- Bridge: 4/4 auth gates wrapped
+- Tests: 43 bridge + 405 full = 0 failures
+- Metrics: recording allow + deny for all gate types
+- Load test: 400 total requests across 2 runs, 0 failures
