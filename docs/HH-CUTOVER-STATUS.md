@@ -33,6 +33,12 @@ the 30-day dual-write window.
 | `tenants` | ✅ Migrated (this commit) | 5 (tenant:read/write + user:read/write/invite) | `8fbdbc3` |
 | `tenant-lifecycle` | ✅ Migrated (this commit) | 2 (tenant:read/write) | `8fbdbc3` |
 | `fiscal-periods` | ✅ Migrated (this commit) | 2 (gl:close-period, reports:read) | `8fbdbc3` |
+| `reports` | ✅ Migrated (latest) | 1 (reports:read) | `89aa829` |
+| `webhooks` | ✅ Migrated (latest) | 2 (webhook:read/write) | `89aa829` |
+| `approvals` | ✅ Migrated (latest) | 4 (approval:read/write/approve/admin) | `89aa829` |
+| `assets` | ✅ Migrated (latest) | 4 (asset:read/write/depreciate/dispose) | `89aa829` |
+| `tenant-lifecycle` | ✅ Migrated (this commit) | 2 (tenant:read/write) | `8fbdbc3` |
+| `fiscal-periods` | ✅ Migrated (this commit) | 2 (gl:close-period, reports:read) | `8fbdbc3` |
 
 ### Pending (lower priority — legacy RBAC during dual-write window)
 
@@ -40,7 +46,7 @@ the 30-day dual-write window.
 `meta`, `numbering`, `parties`, `periods`, `reference`, `reports`,
 `schedules`, `webhooks`, `approvals`, `_utils`, `apikeys` (legacy perm ref)
 
-20 modules total. Per migration spec §7 step 3, these can be migrated
+16 modules total. (i18n, meta, _utils, ai, and 12 others have no requirePermission calls — they use only requireAuth and don't need migration.) Per migration spec §7 step 3, these can be migrated
 in any order — the dual-write window ensures no audit gaps.
 
 ---
