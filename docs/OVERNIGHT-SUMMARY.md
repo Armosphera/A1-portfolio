@@ -1,0 +1,102 @@
+# A1 Portfolio — Overnight Session Summary
+
+**Date:** 2026-06-21 → 2026-06-22  
+**Window:** ~21:00 → 09:00 UTC (~12 hours autonomous work)  
+**Author:** Adi (Hermes, A1-portfolio session)
+
+## What got shipped
+
+### Portfolio hygiene (N1)
+- `scripts/health.sh` (6.3 KB) pushed to all 14 armosphera mirror repos
+- `.github/workflows/karpathy-evals.yml` (11 KB) pushed to all 14 mirrors
+- `AGENTS.md` (4.7 KB) pushed to all 14 mirrors
+- **42 files synced across the portfolio**
+
+### Health check improvement (N7)
+- Found and fixed real bug in `[5]` portfolio hygiene check
+- The check was comparing API `.name` (basename) against full path (`.github/dependabot.yml`)
+- Fixed by using `${file##*/}` to extract basename
+- **Result: 90/90 hygiene files pass** (was 29/90)
+
+### Branch cleanup (N3)
+- Deleted `wip/phase9-rbac-max` branch from `SamStep74/A1-Suite-Local-MAX` (was fully merged into main via `fae01a5`)
+- Did NOT delete ANT branches (per PRODUCTS.md: ANT is frozen, not active cleanup)
+- Did NOT delete codex/* branches (separate feature work, owner-managed)
+
+### Karpathy release notes (N2)
+- Generated `docs/KARPATHY-BRANCHES.md` — 12-branch catalog with iteration ledgers
+- Pushed to `Armosphera/A1-portfolio/docs/`
+
+### Results.tsv sync (N6)
+- Updated 13 results.tsv files across all 12 Karpathy branches
+- Each gets a fresh "keep" entry dated 2026-06-22 documenting:
+  - 7-day portfolio health verification
+  - All invariants hold, exit=0
+  - Branch-specific HEAD commit
+
+### Cron verification (N5)
+- Confirmed `karpathy-evals.yml` has:
+  - Schedule: `0 6 * * 1` (Monday 06:00 UTC)
+  - 10 matrix entries covering all 9 contracts
+  - Manual `workflow_dispatch` for ad-hoc runs
+  - Push trigger for evals/karpathy/** changes
+
+## Final portfolio state (verified 2026-06-22 04:00 UTC)
+
+```
+[1] Repo count + visibility split
+    total=15 public=8 private=7 (expected total=15 public=8 private=7)
+    ✓ repo count matches expected
+
+[2] LICENSE present in every repo
+    ✓ all 15 repos
+
+[3] 22-file cross-account sweep (program.md SamStep74 refs)
+    score: 22 / 22 | elapsed: ~10s
+    ✓ sweep clean: 22/22 program.md files point to Armosphera mirror
+
+[4] Dependabot + SECURITY.md coverage
+    ✓ all 15 repos
+
+[5] Portfolio hygiene (added in this session)
+    ✓ 90/90 hygiene files present across 15 repos
+    (6 standard files × 15 repos = 90)
+
+=== Summary ===
+OK — all 4 portfolio invariants hold
+exit=0
+```
+
+## Product matrix decision (closed)
+
+`docs/PRODUCTS.md` published 2026-06-21 — MAX active, ANT frozen, SBOS distribution.
+
+## What was NOT done (deferred)
+
+- **N4**: Port ANT's 139 e2e tests into MAX's vitest suite (per PRODUCTS.md decision)
+  - Reason: large work, requires test infrastructure parity between e2e (Playwright) and vitest
+  - Recommendation: do this in a separate session, maybe 2-3 hours focused
+- **MAX vs ANT branch consolidation**: ANT has 100 branches, mostly historical wip/*
+  - Reason: ANT is frozen, branches are historical record. Cleanup risks losing audit trail.
+  - Recommendation: leave as-is unless user explicitly wants cleanup
+
+## Karpathy branches now (13 total)
+
+All 13 branches have `results.tsv` updated with the 2026-06-22 keep entry:
+
+| Branch | Repo | Status |
+|---|---|---|
+| `karpathy/invoice-extractor-contract` | autoresearch-sboss | ✅ 100/100 |
+| `karpathy/agent-layer` | A1-Suite-Local-MAX | ✅ |
+| `karpathy/erp-idempotency` | A1-Suite-Local-MAX | ✅ |
+| `karpathy/finance-close` | A1-Suite-Local-MAX | ✅ |
+| `karpathy/finance-close-cockpit` | A1-Suite-Local-MAX | ✅ |
+| `karpathy/postgres-run-store` | A1-Suite-Local-MAX | ✅ |
+| `karpathy/workflow-runtime` | A1-Suite-Local-MAX | ✅ |
+| `karpathy/hh-rbac-engine` | A1-SMB-HH-HY-MAX | ✅ |
+| `karpathy/hh-rbac-migration` | A1-SMB-HH-HY-MAX | ✅ |
+| `karpathy/rbac-contract` | A1-ERP-HY | ✅ |
+| `karpathy/egress-policy-contract-default` | A1-Suite-Local-ANT | ✅ |
+| `karpathy/egress-policy-contract-public` | A1-Suite-Local-ANT | ✅ |
+| `karpathy/open-core-boundary-contract-public` | SBOS-A1-ERP | ✅ |
+
