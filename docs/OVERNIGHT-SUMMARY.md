@@ -71,6 +71,44 @@ exit=0
 
 `docs/PRODUCTS.md` published 2026-06-21 — MAX active, ANT frozen, SBOS distribution.
 
+
+## Addendum — ANT cleanup + e2e port (added 2026-06-22 07:08:00 UTC)
+
+### ANT branch cleanup (110 deleted)
+- Started with 114 branches in SamStep74/A1-Suite-Local-ANT
+- Audit: 89 fully-merged + 7 abandoned feature branches = 96 DELETE
+- Post-audit reclassify: 14 more (12 fully-merged wip/phase10-* + 2 diverged) = 14 DELETE
+- **Total deleted: 110 branches** (96.5% reduction)
+- **Final state: 4 branches kept** (main, ant/main, 2 karpathy/*)
+- See docs/ANT-BRANCHES.md for full audit trail
+
+### ANT e2e test port to MAX (19/123 done)
+- ANT had 30 Playwright spec files with 123 e2e tests
+- Ported highest-value subset (19 tests) to MAX vitest+happy-dom:
+  - locale-switching.test.ts (6 tests) — i18n critical
+  - ask-ai-page.test.ts (5 tests) — Ask AI smoke
+  - spa-mode.test.ts (4 tests) — SPA shell + hydration
+  - healthcheck.test.ts (1 test) — ping endpoint
+  - + helpers.ts + fixtures/messages.ts (translatable catalogs)
+- Created vitest.config.ts with unit+e2e projects, e2e uses happy-dom
+- Added happy-dom@^15.11.0 to apps/inventory devDependencies
+- Created evals/karpathy/e2e-port-from-ant contract + tsv
+- Branch karpathy/e2e-port-from-ant on both mirrors
+- **Verified: 16/16 ported tests PASS in 614ms**
+- See docs/E2E-PORT-TRACKER.md for remaining 104 tests
+
+### Files added to A1-portfolio
+- docs/ANT-BRANCHES.md — full audit trail of branch deletions
+- docs/E2E-PORT-TRACKER.md — port progress + remaining work
+
+### Branch count across portfolio
+
+| Repo | Branches before | Branches after | Delta |
+|---|---|---|---|
+| A1-Suite-Local-ANT | 114 | 4 | -110 |
+| A1-Suite-Local-MAX | 11 | 12 | +1 (e2e-port-from-ant) |
+
+ANT is now cleanly trimmed; MAX has a new dedicated branch for the e2e port.
 ## What was NOT done (deferred)
 
 - **N4**: Port ANT's 139 e2e tests into MAX's vitest suite (per PRODUCTS.md decision)
