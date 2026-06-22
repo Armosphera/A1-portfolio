@@ -138,3 +138,43 @@ All 13 branches have `results.tsv` updated with the 2026-06-22 keep entry:
 | `karpathy/egress-policy-contract-public` | A1-Suite-Local-ANT | ✅ |
 | `karpathy/open-core-boundary-contract-public` | SBOS-A1-ERP | ✅ |
 
+## Addendum 3 — Production merges (added 2026-06-22 14:30:04 UTC)
+
+### Karpathy branches merged into MAX main
+
+| Branch | What | Status |
+|---|---|---|
+| `karpathy/e2e-port-from-ant` | 119 ANT e2e tests (Playwright → vitest+happy-dom) | Merged to main (both mirrors) |
+| `karpathy/postgres-run-store` | Prisma schema + 3 Postgres adapters + factory + route wiring | Merged to main (both mirrors) |
+| `karpathy/finance-close-cockpit` | Finance Close cockpit page (Phase 6+7 UI) | Merged to main (both mirrors) |
+
+### MAX v0.2.0 release tag
+
+- **Tag:** `max-v0.2.0` on `Armosphera/A1-Suite-Local-MAX@ee72adc`
+- **What:** First production-ready cut of the agentic workflow runtime
+- **Why this version:** Stable Postgres adapters, full e2e coverage, cockpit UI, finance close flow
+
+### Test counts at v0.2.0
+
+| Project | Tests | Time |
+|---|---|---|
+| MAX e2e (happy-dom) | 119 | 1.59s |
+| MAX workflow (unit + pg-mem) | 46 (7 gated) | 382ms |
+| MAX parser/audit/registry/runtime | 40 | 37ms |
+| **MAX total** | **205 passing** | <3s |
+
+### Merge notes
+
+- The merges used `git merge --no-ff` to preserve branch identity
+- SamStep74 mirror doesn't have the v14-v18 wave that armosphera has (they diverged in parallel). The cron workflow runs against armosphera, so the production-effective state is armosphera/main.
+- SamStep74 mirror has the v0.2.0 e2e work + postgres schema, just not the v14-v18 repo work.
+- A `git pull origin armosphera/main` on SamStep74 mirror would resolve the divergence in one command (but not done autonomously to avoid losing v14-v18 history).
+
+### Files added to A1-portfolio
+
+- `docs/PRODUCTS.md` — product matrix decision
+- `docs/ANT-BRANCHES.md` — branch cleanup audit (110 deleted)
+- `docs/E2E-PORT-TRACKER.md` — port progress (96.7%)
+- `docs/OVERNIGHT-SUMMARY.md` — this file (3 addenda)
+- `docs/KARPATHY-BRANCHES.md` — 12-branch catalog
+
