@@ -9,8 +9,8 @@
 ## TL;DR
 
 HH is mid-migration from the legacy 10-role permission map to the
-MAX V1 RBAC contract (5 roles, 50 permissions). 9 of the 34 modules
-have been migrated; the remaining 25 stay on the legacy map during
+MAX V1 RBAC contract (5 roles, 50 permissions). 14 of the 34 modules
+have been migrated; the remaining 20 stay on the legacy map during
 the 30-day dual-write window.
 
 ---
@@ -26,17 +26,21 @@ the 30-day dual-write window.
 | `audit` | ✅ Migrated | 2 (read/export) | initial port |
 | `tax` | ✅ Migrated | 3 (read/write/file) | `3701391` |
 | `payroll` | ✅ Migrated | 4 (read/write/run/approve) | `3701391` |
-| `notifications` | ✅ Migrated (this commit) | 4 (tenant:read/write) | `fea4dad` |
-| `apikeys` | ✅ Migrated (this commit) | 2 (webhook:read/write) | `fea4dad` |
+| `notifications` | ✅ Migrated | 4 (tenant:read/write) | `fea4dad` |
+| `apikeys` | ✅ Migrated | 2 (webhook:read/write) | `fea4dad` |
+| `banking` | ✅ Migrated (this commit) | 4 (import/read/reconcile/write) | `8fbdbc3` |
+| `expenses` | ✅ Migrated (this commit) | 3 (approve/read/write) | `8fbdbc3` |
+| `tenants` | ✅ Migrated (this commit) | 5 (tenant:read/write + user:read/write/invite) | `8fbdbc3` |
+| `tenant-lifecycle` | ✅ Migrated (this commit) | 2 (tenant:read/write) | `8fbdbc3` |
+| `fiscal-periods` | ✅ Migrated (this commit) | 2 (gl:close-period, reports:read) | `8fbdbc3` |
 
 ### Pending (lower priority — legacy RBAC during dual-write window)
 
-`banking`, `expenses`, `fiscal-periods`, `fx`, `i18n`, `meta`, `tenants`,
-`tenant-lifecycle`, `invites`, `_utils`, `ai`, `assets`, `documents`,
-`email`, `journals`, `numbering`, `parties`, `periods`, `reference`,
-`reports`, `schedules`, `webhooks`, `approvals`, `apikeys` (legacy perm ref)
+`ai`, `assets`, `documents`, `email`, `fx`, `i18n`, `invites`, `journals`,
+`meta`, `numbering`, `parties`, `periods`, `reference`, `reports`,
+`schedules`, `webhooks`, `approvals`, `_utils`, `apikeys` (legacy perm ref)
 
-24 modules total. Per migration spec §7 step 3, these can be migrated
+20 modules total. Per migration spec §7 step 3, these can be migrated
 in any order — the dual-write window ensures no audit gaps.
 
 ---
@@ -48,7 +52,8 @@ in any order — the dual-write window ensures no audit gaps.
 - `src/rbac-engine.ts` (301 lines): MAX V1 RBAC engine
 - `src/middleware/max-rbac.ts` (87 lines): Fastify preHandler factory
 - `src/middleware/max-rbac-mapping.ts` (62 lines): HH → MAX permission code mapping
-- `src/middleware/max-rbac.js` (shim): re-export for `.js` import compatibility
+- `src/rbac-engine.js` + `src/middleware/max-rbac-mapping.js`: shims for
+  vitest v2 path resolution
 
 ### Tests (in this branch)
 
@@ -94,8 +99,8 @@ After 30 days of parity (per migration spec §7 step 2), the legacy
 | `banking:*` | `hh.banking.*` | HH extension |
 | `audit:read` | `audit.read` | Direct |
 | `audit:export` | `audit.read` | HH extension |
-| `webhook:read` | `hh.approval.read` | HH extension (this commit) |
-| `webhook:write` | `hh.approval.write` | HH extension (this commit) |
+| `webhook:read` | `hh.approval.read` | HH extension |
+| `webhook:write` | `hh.approval.write` | HH extension |
 | `reports:*` | `finance.report.*` | Direct |
 | `fiscal-periods:*` | `hh.gl.close-period` | HH extension |
 | `tenants:*` | `org.*` | MAX |
@@ -108,8 +113,8 @@ After 30 days of parity (per migration spec §7 step 2), the legacy
 
 ### Short-term (within 30-day dual-write window)
 
-1. Migrate the 4 most-trafficked remaining modules: `banking`, `expenses`,
-   `tenants`, `fiscal-periods`
+1. Migrate the 4 most-trafficked remaining modules: `reports`,
+   `i18n`, `meta`, `_utils`
 2. Add an integration test that asserts `rbac_audit` and `audit_events`
    receive the same rows (parity check)
 3. Document the `tenant-lifecycle` API surface in `docs/HH-API.md`
