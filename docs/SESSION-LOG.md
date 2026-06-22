@@ -846,3 +846,13 @@ ALL 4 auth gates in server.js now have bridge wrappers:
 ## Wave 19 — 6th autonomous run
 
 Load test #5: 200/200 success (4th consecutive clean). 438 tests passing. 800 load requests, 800 successes. Bridge is production-ready.
+## Wave 20 - observability polish
+
+New ops tools:
+- ops/watch-after-deploy.sh: monitors bridge for N seconds after RBR_ENABLED change
+- ops/bridge-summary.sh: single-line status to /tmp/bridge-summary.txt
+- ops/trend-metrics.sh: added per-role breakdown
+
+Test coverage: 47 -> 55 bridge (+8), 438 -> 449 full (+11)
+
+Bridge state: 721 req (478A/243D), stable
