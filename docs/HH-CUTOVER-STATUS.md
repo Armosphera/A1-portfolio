@@ -9,8 +9,8 @@
 ## TL;DR
 
 HH is mid-migration from the legacy 10-role permission map to the
-MAX V1 RBAC contract (5 roles, 50 permissions). 14 of the 34 modules
-have been migrated; the remaining 20 stay on the legacy map during
+MAX V1 RBAC contract (5 roles, 50 permissions). 18 of the 34 modules
+have been migrated; the remaining 16 stay on the legacy map during
 the 30-day dual-write window.
 
 ---
@@ -37,17 +37,27 @@ the 30-day dual-write window.
 | `webhooks` | ✅ Migrated (latest) | 2 (webhook:read/write) | `89aa829` |
 | `approvals` | ✅ Migrated (latest) | 4 (approval:read/write/approve/admin) | `89aa829` |
 | `assets` | ✅ Migrated (latest) | 4 (asset:read/write/depreciate/dispose) | `89aa829` |
-| `tenant-lifecycle` | ✅ Migrated (this commit) | 2 (tenant:read/write) | `8fbdbc3` |
-| `fiscal-periods` | ✅ Migrated (this commit) | 2 (gl:close-period, reports:read) | `8fbdbc3` |
 
 ### Pending (lower priority — legacy RBAC during dual-write window)
 
-`ai`, `assets`, `documents`, `email`, `fx`, `i18n`, `invites`, `journals`,
-`meta`, `numbering`, `parties`, `periods`, `reference`, `reports`,
-`schedules`, `webhooks`, `approvals`, `_utils`, `apikeys` (legacy perm ref)
+Actually-migrating-remaining (12 modules with `requirePermission` calls):
 
-16 modules total. (i18n, meta, _utils, ai, and 12 others have no requirePermission calls — they use only requireAuth and don't need migration.) Per migration spec §7 step 3, these can be migrated
-in any order — the dual-write window ensures no audit gaps.
+- `ai` (copilot orchestration, 1 perm)
+- `documents` (1 perm)
+- `email` (2 perms)
+- `fx` (2 perms)
+- `invites` (1 perm)
+- `journals` (4 perms)
+- `numbering` (2 perms)
+- `parties` (2 perms)
+- `periods` (1 perm)
+- `reference` (1 perm)
+- `schedules` (1 perm)
+
+No-RBAC-needed (4 modules with only `requireAuth`, no permission checks):
+- `i18n`, `meta`, `_utils`, `apikeys` (legacy perm ref, but the actual apikeys routes are now on MAX)
+
+Per migration spec §7 step 3, these can be migrated in any order — the dual-write window ensures no audit gaps.
 
 ---
 
