@@ -24,7 +24,23 @@ Two RBAC bridge implementations have been deployed:
 
 ## Status of dev HH-HY pilot (macstudio)
 
-- ✅ Server runs with RBR_ENABLED=1 (PID dynamic, restart after edit)
+**Updated 2026-06-22 08:00 (autonomous run):**
+
+
+
+- ✅ Server runs with RBR_ENABLED=1 (PID 49865, restart-tolerant)
+- ✅ /metrics endpoint on :9091 emits rbac_bridge_requests_total
+- ✅ Baseline equivalence: legacy = bridge for 5 tested routes
+- ✅ bridgeRequireEditor added (line 342 wrapper)
+- ✅ BRIDGE_TRACE debug log removed
+- ✅ All 7 requireOwner callsites wrapped (verified via grep)
+- ✅ 29/29 tests passing (16 role logic + 8 deny cases + 5 regression)
+- ✅ Grafana dashboard added: deploy/grafana/rbac-bridge-dashboard.json
+- ✅ Watchdog script added: ops/watchdog-bridge.sh (cron every 30min)
+- ✅ README section added: bridge mode deployment guide
+- ⚠️ Karpathy cron file in `ops/pending-workflow-push/` awaiting manual push
+- ✅ Test coverage extended to 29 tests
+
 - ✅ /metrics endpoint on :9091 emits rbac_bridge_requests_total
 - ✅ Baseline equivalence: legacy = bridge for 5 tested routes
 - ✅ bridgeRequireEditor added (line 342 wrapper)
