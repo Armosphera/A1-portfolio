@@ -600,3 +600,53 @@ ac810ea feat(rbac): add bridge middleware for HH-HY dev — metrics + role-based
    ```
 
 4. Continue 24h monitoring of /metrics on dev.
+
+
+## Wave 15.5 — 2026-06-22 08:00: Continued autonomous run (Sam sleeping until 9am)
+
+### Improvements added during the night
+
+**Test coverage extended 16 → 29 tests:**
+- 8 deny-case tests (viewer/admin/editor/null denied for higher-priv ops)
+- 5 regression tests (no debug code, all callsites wrapped, dashboard)
+- All 29 tests passing
+
+**Grafana dashboard added:** `deploy/grafana/rbac-bridge-dashboard.json`
+- 5 panels: requests/sec by outcome, allow/deny ratio, role distribution, required-role distribution, bridge enabled status
+- Compatible with the existing Grafana setup
+
+**Watchdog script:** `ops/watchdog-bridge.sh`
+- Cron job: every 30 min checks /health and /metrics endpoints
+- Log: /tmp/hh-bridge-watchdog.log
+- Currently running and reporting OK
+
+**README section:** bridge mode deployment guide
+- Env vars, metrics, role model, tests, rollout plan, rollback
+- 3.4 KB of documentation
+
+**Extended baseline test:** 15 requests (5 scenarios × 3 endpoints)
+- All returned 200/201 — consistent with legacy behavior
+- Cumulative metrics: 20 editor checks + 7 owner checks
+
+### Git history (3 new commits)
+
+```
+4640691 docs: update cross-check with autonomous run stats
+fdd9ffe test+ops: extend bridge coverage (29 tests) + Grafana + watchdog
+```
+
+### Karpathy workflow — STILL BLOCKED on workflow scope
+
+The workflow file `ops/pending-workflow-push/karpathy-evals.yml` cannot be pushed
+via OAuth token. Documented in `ops/pending-workflow-push/README.md` with 3
+workarounds (web UI / PAT / gh auth refresh).
+
+### Live state at end of run
+
+- Server: http://localhost:8080 (RBR_ENABLED=1)
+- Health: http://localhost:9091/health → bridge_enabled:true
+- Metrics: 20 editor + 7 owner checks recorded
+- Tests: 29/29 passing
+- Watchdog: 5 OK entries in /tmp/hh-bridge-watchdog.log
+- Cross-check report: portfolio/docs/BRIDGE-CROSSCHECK-HH-HY-vs-MAX.md updated
+- Grafana dashboard: portfolio/docs/grafana/rbac-bridge-hh-hy-dashboard.json
