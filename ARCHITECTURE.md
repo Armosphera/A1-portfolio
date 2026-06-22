@@ -391,3 +391,56 @@ lives at [`docs/PRODUCTS.md`](./docs/PRODUCTS.md).
 The remaining in-scope items (Phase 8 trust/safety, cockpit UX polish,
 Postgres adapter hardening, HH cutover parity) continue in MAX per
 the existing workflow plan.
+
+---
+
+## Karpathy eval lanes (locked contracts)
+
+Each lane is an **independent test job** that fails CI on contract drift. They are
+the highest-value testing surface in the portfolio — they protect API shape, not
+just behavior.
+
+### Currently active lanes
+
+| Lane | Repo | Path | Protects |
+|------|------|------|----------|
+| `di-contract-frozen` | `armosphera/A1-AI-Core` | `evals/di-contract-frozen/` | `createAi()` 7-field signature (frozen-within-minor) |
+| `fallback-models-stability` | `armosphera/A1-AI-Core` | `evals/fallback-models-stability/` | `FALLBACK_MODELS` (offline-mode safety net, Object.freeze + ≥3 entries) |
+| `open-notebook-non-throwing` | `armosphera/A1-AI-Core` | `evals/open-notebook-non-throwing/` | `createOpenNotebook().search()` is opt-in, egress-gated, never throws |
+| `egress-policy-contract` | `armosphera/A1-Suite-Local-ANT` | `evals/karpathy/` | Sovereignty: outbound network OFF by default, allowlist-gated |
+| `vat-return-contract` | `armosphera/A1-Localization-AM` | `evals/karpathy/` | Armenian VAT return cross-foot tie-out, integer/non-negative checks |
+| `vat-einvoice-contract` | `armosphera/A1-Localization-RU` | `evals/karpathy/` | Russian e-invoice format 5.03 + UPD / счёт-фактура |
+| `validate` | `armosphera/A1-Platform-MAX` | (per-repo) | (see Issue #10 for fork contract) |
+
+### Lane pattern
+
+Each lane consists of 3-4 files:
+
+- `check.js` — runs on every push/PR, exit 0 = pass
+- `program.md` — rationale, what the lane protects, allowed/breaking changes
+- `lane.json` — machine-readable contract (consumed by orchestration tools)
+- `run.sh` — optional wrapper for launchd/local-ci.sh invocation
+
+### Adding a new lane
+
+1. `mkdir evals/<lane-name>/` in the owning repo
+2. Write `check.js` (AST-based for source contracts, behavioral for runtime contracts)
+3. Write `program.md` with citations to the source-of-truth spec
+4. Write `lane.json` with the contract fields
+5. Wire into `.github/workflows/ci.yml` (with `if: false` for private repos)
+6. Open an issue in `armosphera/A1-portfolio` to register the lane
+7. Add to this table
+
+### Cross-portfolio invariant
+
+A lane in `A1-AI-Core` is consumed by all 4 downstream apps. Any lane failure means
+**all 4 consumers** are at risk. The consumer-bump checklist pattern (documented
+in `A1-AI-Core/AGENTS.md`) is the coordinated response.
+
+### Future lanes (planned)
+
+- `a1-ai-fork-contract` in `A1-Suite-Local-MAX` (Issue #10) — lock the TypeScript fork's public surface
+- `pension-am-tier-boundary` in `A1-Localization-AM` — Armenian funded pension tier math
+- `pension-ru-ceiling-crossing` in `A1-Localization-RU` — Russian pension cross-ceiling month
+- `hhvh-check-digit-algorithm` in `A1-Validator` — when upstream implements the official Armenian HHVH check-digit
+- `portfolio-drift-contract` in `A1-portfolio` — detect drift between README, LICENSING.md, ARCHITECTURE.md, expected-repos.json
