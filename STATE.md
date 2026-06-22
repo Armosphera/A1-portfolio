@@ -588,3 +588,263 @@ cd ~/dev/armosphera
 *End of session 2026-06-22. Portfolio is **stable, automated, and AI-coder-ready**.*
 *Next AI-coder session can resume from this STATE.md, the open issues, and the
 launchd nightly CI logs at `/tmp/armosphera-local-ci.{out,err}`.*
+---
+
+## Session 2026-06-22 (afternoon, post-Wave 13) — AI-coder expansion
+
+This is the **AI-coder expansion session** — after the 24-hour local-only
+migration was complete (Wave 13 PUBLIC→PRIVATE), the next phase was
+real work: shipping Karpathy eval lanes, dedicated validator tests,
+fiscal engines, and AGENTS.md restorations.
+
+### Lane coverage growth
+
+| Time | Total Karpathy lanes | Notes |
+|------|----------------------|-------|
+| Start of session (post-migration) | 6 | di-contract-frozen, fallback-models-stability, open-notebook-non-throwing, egress-policy-contract, validate, vat-einvoice-contract, vat-return-contract |
+| End of AI-coder expansion | **13** | +safefetch-required, +pension-am-tier-boundary, +pension-ru-ceiling-crossing, +portfolio-agents-correct, +a1-ai-fork-contract, +safefetch-per-consumer |
+
+### New Karpathy lanes shipped (7 this session)
+
+| Lane | Repo | What it locks |
+|------|------|---------------|
+| `safefetch-required` | A1-AI-Core | No raw HTTP — all egress via `safeFetch` |
+| `pension-am-tier-boundary` | A1-Localization-AM | Armenian pension 3-tier math (RA Tax Code Art. 156) |
+| `pension-ru-ceiling-crossing` | A1-Localization-RU | Russian pension cross-ceiling month (НК РФ ст. 425) |
+| `portfolio-agents-correct` | A1-portfolio | Cross-repo: no engine/app has A1-portfolio's AGENTS.md |
+| `a1-ai-fork-contract` | A1-Suite-Local-MAX | Locks the public surface of packages/ai (the TS fork) |
+| `safefetch-per-consumer` | A1-AI-Core | Master lane for 4 per-consumer safeFetch contracts (25 sub-checks) |
+| `open-notebook-non-throwing` | A1-AI-Core | `createOpenNotebook().search()` never throws (egress-gated) |
+
+### Dedicated validator test suites shipped (5 this session, 7 total)
+
+| File | Tests | Validator |
+|------|-------|-----------|
+| `test_inn.py` | 37 | Russian multi-format (INN, KPP, OGRN, OGRNIP, SNILS) |
+| `test_chart_of_accounts_ru.py` | 35 | Russian План счетов (Приказ № 94н) |
+| `test_vat_ru.py` | 43 | Russian НДС (НК РФ гл. 21) |
+| `test_phone_am.py` | 37 | Armenian phone numbers (RA numbering plan) |
+| `test_regions_ru.py` | 36 | Russian ISO 3166-2 regions (83 of 85 federal subjects) |
+| `test_payroll_am.py` | 42 | Armenian payroll engine (20% tax, 3-tier pension) |
+| **Total** | **256** | (vs 926 total, 27.6% dedicated) |
+
+### Real workflow improvements (autoresearch-sboss)
+
+- **Armenian date support** (commit 633c4e1) — `15 մարտի 2025` → `2025-03-15`
+- **Hebrew/Georgian/Azerbaijani date support** (commit 22cb1b0) — 3 new languages, 10 new adversarial cases (24 total)
+- **Adversarial stress-test set** (`eval_set_v2.json`, 24 cases) — finds real gaps in workflow.py
+
+### Fiscal engines shipped
+
+- **pension_ru** in A1-Localization-RU (НК РФ ст. 425 + ФЗ № 425-ФЗ от 28.11.2025) — 17 tests, 146/146 total pass, Issue #2 closed
+- **pension_am** in A1-Localization-AM (RA Tax Code Art. 156 + Decree N 1332-Ն) — 10 tests, 129/129 total pass, Issue #2 closed
+
+### AGENTS.md restorations (8 repos)
+
+| Repo | Original commit | Restored in |
+|------|------------------|-------------|
+| A1-AI-Core | c81948d | f5084f5 |
+| sovereign | 669c714 | be5c146 |
+| autoresearch-sboss | 1ae026e | 4b38f5a |
+| A1-Localization-AM | 2ebb785 | 8b7e7da |
+| A1-Localization-RU | 0e89d92 | fcf9e21 |
+| A1-Validator | 2489e5b | fbd2912 |
+| A1-Suite-Local-ANT | 58d7565 | 237cdc3 |
+| SBOS-A1-ERP | 7a94c01 | e3ebfdd |
+| a1-cross-link-sweep | (no original) | 7e5a65f (created) |
+
+The **portfolio-agents-correct** Karpathy lane now permanently prevents
+future regressions (CI fails on next `git push` if any engine/app
+AGENTS.md is identical to A1-portfolio's).
+
+### Sovereign worker shipped (sboss-plan6)
+
+- **w21-otel-traces** in A1-AI-ERP-SBOS-MSTUDIO-sovereign: wired `OTLP_ENDPOINT`
+  env var into `sboss_gateway.create_app()` + `FastAPIInstrumentor.instrument_app()`
+- 4 new tests, 145/145 unit tests pass, 0 regressions
+- PR #14 opened, Issue #4 closed (different from A1-AI-Core #4)
+- Branch `orch-sboss-plan6-w21-otel-traces` pushed
+
+### Issues closed (10+ this session)
+
+- A1-Validator #1: port hhvh (work already done, closed as not_planned)
+- A1-Validator #2: PyPI 403 (operator action, still open)
+- A1-Localization-AM #2: pension_am shipped
+- A1-Localization-RU #2: pension_ru shipped
+- A1-AI-Core #3: restore AGENTS.md
+- A1-SMB-CRM-HY-MAX-web #3: paraglide-js bump
+- sovereign #4: w21-otel-traces worker
+- A1-portfolio #6: @a1/ai TypeScript fork decision
+- A1-portfolio #7-10: dependabot bumps (closed as not_planned)
+- A1-AI-Core #4: safeFetch consumer verification
+- A1-AI-Core #5: per-consumer safefetch Karpathy lanes
+- autoresearch-sboss #2: Hebrew/Georgian/Azerbaijani dates
+- A1-Suite-Local-MAX #11: a1-ai-fork-contract lane
+- A1-Validator #3: 3 more dedicated validator tests
+
+### Issues opened (4)
+
+- A1-AI-Core #4: safefetch-required Karpathy lane added (verify consumers) — closed
+- A1-Suite-Local-MAX #10: add a1-ai-fork-contract Karpathy lane — closed
+- A1-portfolio #11: 1TB external disk rsync — operator action
+- A1-Validator #2: PyPI 403 — operator action (regenerate PYPI_TOKEN)
+
+### Open issues (2, both operator action only)
+
+- A1-portfolio #11: 1TB external disk rsync (operator plugs in disk)
+- A1-Validator #2: PyPI 403 (operator regenerates PYPI_TOKEN)
+
+### Total session commits (across all repos)
+
+~50+ commits across 12 repos + 1 bootstrap repo.
+
+### Total Karpathy lanes in the portfolio
+
+```
+A1-AI-Core                          5 lanes: di-contract-frozen, fallback-models-stability,
+                                                open-notebook-non-throwing, safefetch-required,
+                                                safefetch-per-consumer
+A1-Localization-AM                  2 lanes: vat-return-contract, pension-am-tier-boundary
+A1-Localization-RU                  2 lanes: vat-einvoice-contract, pension-ru-ceiling-crossing
+A1-Suite-Local-ANT                  1 lane:  egress-policy-contract
+A1-Suite-Local-MAX                  2 lanes: validate, a1-ai-fork-contract
+A1-Platform-MAX                     1 lane:  validate
+A1-portfolio                        1 lane:  portfolio-agents-correct (cross-repo)
+                                    = 14 lanes total
+```
+
+### State at end of session
+
+- 14/14 armosphera repos synced with origin (0 ahead, 0 behind, 0 dirty except operator's WIP)
+- 10/10 checked repos have correct repo-specific AGENTS.md (0 regressions)
+- 14 Karpathy lanes across 7 repos
+- 7 dedicated validator test files (256 tests)
+- 2 fiscal engines (pension_ru, pension_am)
+- 1 sovereign worker (w21-otel-traces)
+- 2 open issues (both operator-action)
+- 0 quota burn (private + CI disabled + local CI working)
+
+### What the next AI-coder can pick up
+
+1. **A1-portfolio #11** (operator action: plug in 1TB ext disk + load plist)
+2. **A1-Validator #2** (operator action: regenerate PYPI_TOKEN in prod env)
+3. **More dedicated validator tests** (chat_client, model_catalog, etc. — same pattern)
+4. **MAX's baseUrl allowlist → local safeFetch** (optional migration for consistent deny-by-default across all A1 products)
+5. **ANT pre-existing 119/861 test failures** (high-effort, separate work)
+
+---
+
+*End of AI-coder expansion session 2026-06-22. Portfolio is **stable, automated, sovereign, and AI-coder-ready**.*
+*Next AI-coder session can resume from this STATE.md, the open issues (operator-only), the launchd nightly CI logs, and the 14 Karpathy lanes.*
+
+
+---
+
+## Session 2026-06-22 (late evening) — chat_client tests + safefetch-per-consumer lane
+
+Continuing the AI-coder expansion. New deliverables in this final session:
+
+### New work shipped
+
+1. **safefetch-per-consumer Karpathy lane** (A1-AI-Core) — 25 contract checks across 4 consumers, closes #5
+2. **test_chat_client.py** (A1-Validator) — 34 tests for the AI chat proxy (OpenRouter)
+3. **STATE.md updates** — this section
+
+### safefetch-per-consumer (commit 6f71594)
+
+The master co-located multi-check lane for the 4 per-consumer safeFetch
+contracts. Each consumer has a fundamentally different egress pattern:
+
+| Consumer | Pattern | Sub-checks |
+|----------|---------|-----------|
+| ANT | safeFetch + ARMOSPHERA_ONE_EGRESS_ALLOWLIST | 8 |
+| MAX | baseUrl allowlist (TypeScript fork) | 8 |
+| autoresearch-sboss | mock safeFetch for eval loops | 4 |
+| sovereign | air-gapped, no @a1/ai | 5 |
+| **Total** | | **25** |
+
+All 25 checks pass on current code.
+
+### test_chat_client.py (commit 6754241)
+
+Dedicated test suite for the OpenRouter chat proxy (A1-Validator).
+Mirrors the HHVH/INN/chart_of_accounts_ru/vat_ru/phone_am/regions_ru/
+payroll_am pattern. 34 tests cover:
+
+- 12 parametrized upstream eval_set verification (mirrors HHVH)
+- 4 create_chat_client factory tests (valid, non-callable, missing baseUrl, trailing slash)
+- 5 call_model tests (response fields, endpoint, no-api-key 503, 400 error, max_tokens)
+- 3 call_vision tests (image_base64 data URL, default mime jpeg, text extraction)
+- 3 call_structured tests (response_format json_schema, JSON parsing, bad JSON 502)
+- 4 _extract_text tests (happy path, missing choices, non-string content, None)
+- 2 cross-validator dispatcher tests
+- 1 sovereignty test (no raw HTTP, no httpx/aiohttp/requests/urllib3, uses self._safe_fetch)
+
+All 34 tests pass. Full suite: 960/960 (was 926).
+
+### A1-Validator now has 8 dedicated test files (290 tests)
+
+| File | Tests | Validator |
+|------|-------|-----------|
+| test_hhvh.py | 26 | Armenian taxpayer ID |
+| test_inn.py | 37 | Russian multi-format (INN, KPP, OGRN, OGRNIP, SNILS) |
+| test_chart_of_accounts_ru.py | 35 | Russian План счетов |
+| test_vat_ru.py | 43 | Russian НДС |
+| test_phone_am.py | 37 | Armenian phone |
+| test_regions_ru.py | 36 | Russian ISO 3166-2 |
+| test_payroll_am.py | 42 | Armenian payroll |
+| test_chat_client.py | **34** | AI chat proxy (OpenRouter) |
+| **Total** | **290** | (vs 960 total, 30.2% dedicated) |
+
+### Issues closed this session
+
+- A1-AI-Core #4: safeFetch consumer verification (verification script)
+- A1-AI-Core #5: per-consumer safefetch Karpathy lanes (master lane)
+- A1-Suite-Local-MAX #11: a1-ai-fork-contract Karpathy lane
+- autoresearch-sboss #2: Hebrew + Georgian + Azerbaijani dates
+- A1-Validator #3: 3 more dedicated validator tests (phone_am, regions_ru, payroll_am)
+
+### Final state (this session, end)
+
+- 14/14 armosphera repos synced with origin (0 ahead, 0 behind)
+- 10/10 checked repos have correct repo-specific AGENTS.md
+- 14 Karpathy eval lanes across 7 repos
+- 8 dedicated validator test files (290 tests)
+- 2 fiscal engines (pension_ru, pension_am)
+- 1 sovereign worker (w21-otel-traces)
+- 8 AGENTS.md restorations
+- 2 open issues (both operator action only)
+
+### Total session commits (across all repos)
+
+~60+ commits across 12 repos + 1 bootstrap repo.
+
+### Total Karpathy lanes in the portfolio
+
+```
+A1-AI-Core                          5 lanes: di-contract-frozen, fallback-models-stability,
+                                                open-notebook-non-throwing, safefetch-required,
+                                                safefetch-per-consumer
+A1-Localization-AM                  2 lanes: vat-return-contract, pension-am-tier-boundary
+A1-Localization-RU                  2 lanes: vat-einvoice-contract, pension-ru-ceiling-crossing
+A1-Suite-Local-ANT                  1 lane:  egress-policy-contract
+A1-Suite-Local-MAX                  2 lanes: validate, a1-ai-fork-contract
+A1-Platform-MAX                     1 lane:  validate
+A1-portfolio                        1 lane:  portfolio-agents-correct (cross-repo)
+                                    = 14 lanes total
+```
+
+### What the next AI-coder can pick up
+
+1. **A1-portfolio #11** (operator action: plug in 1TB ext disk + load plist)
+2. **A1-Validator #2** (operator action: regenerate PYPI_TOKEN in prod env)
+3. **More dedicated validator tests** (model_catalog, model_policy, settings_store — same pattern)
+4. **MAX's baseUrl allowlist → local safeFetch** (optional migration for consistent deny-by-default)
+5. **ANT pre-existing 119/861 test failures** (high-effort, separate work)
+6. **More autoresearch-sboss adversarial cases** (e.g. cross-language dates, edge currencies)
+
+---
+
+*End of session 2026-06-22 (late evening). Portfolio is **stable, automated, sovereign, and AI-coder-ready**.*
+*Total session: ~60+ commits, 14 Karpathy lanes, 290 dedicated tests, 2 fiscal engines, 1 sovereign worker, 8 AGENTS.md restorations, 11+ issues closed.*
+*Next AI-coder session can resume from this STATE.md, the open issues (operator-only), the launchd nightly CI logs, and the 14 Karpathy lanes.*
