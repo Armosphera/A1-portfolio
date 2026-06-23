@@ -202,3 +202,31 @@ else
   printf "%sFAIL%s — %s error(s), %s warning(s)\n" "$RED" "$RESET" "$errors" "$warnings"
   exit 1
 fi
+
+# -------- 6. HH Day 30 cutover countdown --------
+printf "\n%s[6] HH Day 30 cutover countdown (2026-07-22)%s\n" "$BOLD" "$RESET"
+
+CUTOVER_DATE="2026-07-22"
+TODAY=$(date -u +%Y-%m-%d)
+DAYS_UNTIL=$(python3 -c "import datetime; d=(datetime.date(2026,7,22) - datetime.date.today()).days; print(d)")
+
+if [ "$DAYS_UNTIL" -lt 0 ]; then
+  warn "Cutover date PASSED (${DAYS_UNTIL#-} days ago)"
+elif [ "$DAYS_UNTIL" -eq 0 ]; then
+  warn "Cutover is TODAY ($TODAY)"
+elif [ "$DAYS_UNTIL" -le 7 ]; then
+  warn "Cutover imminent: $DAYS_UNTIL days ($TODAY → $CUTOVER_DATE)"
+elif [ "$DAYS_UNTIL" -le 30 ]; then
+  ok "Cutover window active: $DAYS_UNTIL days remaining ($TODAY → $CUTOVER_DATE)"
+else
+  ok "Cutover scheduled: $DAYS_UNTIL days remaining ($TODAY → $CUTOVER_DATE)"
+fi
+
+# Check if dual-write parity cron is deployed locally
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+PARITY_WORKFLOW="$SCRIPT_DIR/../.github/workflows/hh-rbac-parity.yml"
+if [ -f "$PARITY_WORKFLOW" ]; then
+  ok "HH parity cron workflow deployed (local)"
+else
+  warn "HH parity cron workflow missing locally (will deploy on Day 30)"
+fi
