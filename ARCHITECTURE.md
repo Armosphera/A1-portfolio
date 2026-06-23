@@ -3,6 +3,25 @@
 **Effective:** 2026-06-21
 **Owner:** Armosphera LLC
 
+
+## Recent updates
+
+- **2026-06-23 — happy-dom ^15.11.7 → ^20.10.6 in `A1-Suite-Local-MAX`** —
+  Closes 6 open Dependabot alerts (2 critical RCE + 4 high). JavaScript
+  evaluation is disabled by default in v20, mitigating VM-context escape,
+  ECMAScriptModuleCompiler export-name injection, and cookie-origin confusion
+  CVEs. `npm audit` clean (was 6 open alerts).
+- **2026-06-23 — typecheck cleanup in `batch-execution.test.ts`** —
+  Phase 8 of the workflow runtime tightened `ExecutorDeps` (added `registry`,
+  `permission` for RLS-in-agent-identity gate) and `ProposedAction` (required
+  `stepId`). Added `makeDeps()` helper + 4 explicit `stepId` fields; net
+  `-25 as any / -4 missing stepId / -1 implicit any`. 23/23 batch tests still
+  pass.
+- **2026-06-23 — v0.3.0 batch executor polish** — 8 new edge-case tests
+  covering compensating-actions rollback, unregistered-tool detection,
+  per-run idempotency, and audit-trail continuity. `bc7d80e` (on top of
+  `1fe93dc` on top of `35962db`).
+
 ## Layer cake
 
 ```
