@@ -856,3 +856,36 @@ New ops tools:
 Test coverage: 47 -> 55 bridge (+8), 438 -> 449 full (+11)
 
 Bridge state: 721 req (478A/243D), stable
+## Wave 21 - 8th autonomous run - CRM bridge extension
+
+### Audit results (5 MAX suite repos)
+
+| Repo | requirePermission | Notes |
+|---|---|---|
+| A1-SMB-HH-HY-MAX | (bridge deployed Wave 14) | done |
+| A1-SMB-CRM-HY-MAX | 118 callsites, 22 files | BRIDGE ADDED THIS WAVE |
+| A1-ERP-HY | 287 + 675 requireOwner = 962 | big surface, future work |
+| A1-Suite-Local-MAX | 0 production callsites | new code, no auth yet |
+| A1-Platform-MAX | 48 requireAdmin | platform admin domain |
+
+### CRM bridge module deployed
+
+- src/lib/rbac-bridge-metrics.ts (CRM Prometheus counters on :9095)
+- src/middleware/rbac.ts (bridgeRequirePermission wrapper)
+- test/unit/rbac-bridge-metrics.test.ts (7/7 passing)
+
+### Bugs fixed
+
+1. ES import hoisting - used dynamic import to set env first
+2. key.split('|', 2) JS limitation - used indexOf/slice
+3. reset test expectations - renderMetrics returns empty when no counters
+
+### Verification
+
+- tsc --noEmit: clean
+- vitest run: 799 tests passing
+- 7/7 bridge tests passing
+
+### Git pushed
+
+61593e9  feat(rbac): add CRM bridge middleware
