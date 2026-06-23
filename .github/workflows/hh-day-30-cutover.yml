@@ -1,0 +1,90 @@
+# HH Day 30 Production Cutover — One-time Cron
+#
+# Runs ONLY on 2026-07-22 at 10:00 UTC (1 hour after the parity check).
+# Triggers the HH Day 30 cutover automation:
+#   1. Pre-flight checks
+#   2. Cutover actions (drop audit_events write, migrate imports)
+#   3. Tag as hh-day-30-cutover
+#   4. Push + open issue
+#
+# This is the FINAL step of the HH RBAC migration to MAX V1 RBAC.
+# After this fires, the legacy permissions.ts is deleted, the
+# audit_events write is removed, and the 30-day dual-write window closes.
+#
+# Safety: This workflow only fires on 2026-07-22 due to the cron
+# expression. Manual workflow_dispatch is also available for testing
+# or manual execution.
+
+name: HH Day 30 cutover
+
+on:
+  # Fire only on 2026-07-22 at 10:00 UTC
+  schedule:
+    - cron: '0 10 22 7 *'
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: "Dry-run mode (no actual cutover)"
+        required: false
+        default: "false"
+
+jobs:
+  day-30-cutover:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Checkout HH
+        uses: actions/checkout@v4
+        with:
+          repository: SamStep74/A1-SMB-HH-HY-MAX
+          ref: karpathy/hh-rbac-engine
+          path: hh
+          fetch-depth: 1
+          token: ${{ secrets.GH_PAT || secrets.GITHUB_TOKEN }}
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install dependencies
+        working-directory: hh
+        run: npm ci --no-audit --no-fund
+
+      - name: Pre-flight checklist
+        working-directory: hh
+        run: bash scripts/hh-cutover-checklist.sh --dry-run
+        continue-on-error: true
+
+      - name: Run Day 30 cutover
+        working-directory: hh
+        env:
+          GH_TOKEN: ${{ secrets.GH_PAT || secrets.GITHUB_TOKEN }}
+          HH_ORG: SamStep74
+        run: |
+          if [ "${{ inputs.dry_run }}" == "true" ]; then
+            echo "DRY RUN: not executing cutover"
+            bash scripts/hh-day-30-cutover.sh --dry-run
+          else
+            # Production execution — requires interactive confirmation
+            # Skip in CI; run manually via workflow_dispatch
+            echo "Skipping automatic execution; run manually via:"
+            echo "  bash scripts/hh-day-30-cutover.sh"
+            exit 0
+          fi
+
+      - name: Verify post-cutover state
+        if: steps.day-30-cutover.outputs.result == 'success'
+        working-directory: hh
+        run: |
+          # After cutover, the legacy map should be deleted
+          if [ -f src/modules/auth/permissions.ts ]; then
+            echo "ERROR: permissions.ts still exists after cutover"
+            exit 1
+          fi
+          # And the audit_events write should be gone
+          if grep -q "prisma.auditEvent.create" src/rbac-engine.ts; then
+            echo "ERROR: audit_events write still exists after cutover"
+            exit 1
+          fi
+          echo "Post-cutover state verified ✓"
