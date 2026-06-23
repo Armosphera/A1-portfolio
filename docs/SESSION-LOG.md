@@ -892,3 +892,14 @@ Bridge state: 721 req (478A/243D), stable
 ## Wave 22 - CRM routes migration
 
 90 callsites migrated across 19 files. 846 tests pass. Karpathy cron added. Pushed: 97b5ef4
+## Wave 23 - CRM bridge LIVE verified
+
+ESM compat bug found and fixed (createRequire wrapper).
+Live HTTP traffic through bridge: 5 routes, 5 unique permission labels.
+Tests: 12/12 bridge, 848/848 full project.
+Pushed: 19cd3d6 + 9e97218.
+## Wave 24 - CRM ops tooling (autonomous)
+
+Added RUNBOOK.md, ops/crm-daily-summary.sh, ops/crm-smoke-test.sh.
+Live verified: 5 unique rbac_bridge metrics labels from real HTTP traffic.
+Smoke test 4/4 passing. Pushed c6d4500.
