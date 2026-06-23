@@ -903,3 +903,12 @@ Pushed: 19cd3d6 + 9e97218.
 Added RUNBOOK.md, ops/crm-daily-summary.sh, ops/crm-smoke-test.sh.
 Live verified: 5 unique rbac_bridge metrics labels from real HTTP traffic.
 Smoke test 4/4 passing. Pushed c6d4500.
+## Wave 25 - CRM monitoring + loadtest (autonomous)
+
+New ops:
+- deploy/grafana/rbac-bridge-dashboard.json (6 panels)
+- ops/crm-watchdog.sh + crm-snapshot.sh (cron every 30min/5min)
+- ops/crm-loadtest-bridge.sh (50-200 req stress test)
+
+Live: 50/50 load test success, 24ms avg latency.
+Pushed: f029f11.
