@@ -182,3 +182,18 @@ branches + untracked migrations + 67 failing tests" to:
 ---
 
 *Session closed 2026-06-23 04:00 UTC. Portfolio in production-ready state.*
+
+---
+
+## Addendum (2026-06-23, session close)
+
+After the initial session closed, additional work was completed:
+
+- **A1-Platform-MAX audit**: 40/40 tests pass, repo healthy, audit published
+- **Portfolio test counts**: accurate counts for 12 previously-estimated repos (10,048 total, down from estimated 32,190)
+- **HH Day 30 cutover dry-run**: validated on branch `dry-run/day-30-cutover`. 6773/6775 tests still pass after dropping audit_events write + deleting permissions.ts. Plan documented in `docs/HH-CUTOVER-PLAN.md`.
+- **MAX v0.3.0-rc1, rc2**: 1546/1546 tests passing (was 1496 in v0.2.3). 25 batch executor tests across rc1 + rc2.
+- **Portfolio docs**: 24 published to A1-portfolio (was 19 at first session close).
+- **MAX release tags**: 6 tags total (v0.2.0 through v0.3.0-rc2).
+
+**Portfolio state:** all 4 invariants green, 24 docs, ~10K tests across portfolio.
