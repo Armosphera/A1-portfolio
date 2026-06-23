@@ -83,26 +83,28 @@ jobs:
         with:
           script: |
             const today = new Date().toISOString().slice(0, 10);
-            const title = `[hh-rbac-parity] divergence detected ${today}`;
-            const body = `The HH RBAC parity check failed.
-
-This means \`rbac_audit\` and \`audit_events\` are receiving
-different row counts in the 30-day dual-write window
-(per migration spec §7.2).
-
-**Action items:**
-1. Check the workflow log for the exact counts
-2. Compare recent rows: rbac_audit vs audit_events
-3. If persistent, extend the dual-write window
-4. Reference: docs/HH-CUTOVER-STATUS.md in A1-portfolio
-
-This is one of the 30-day window weekly checks.
-Window started: 2026-06-22
-Window closes: 2026-07-22`;
+            const title = 'HH RBAC parity divergence detected ' + today;
+            const bodyLines = [
+              'The HH RBAC parity check failed.',
+              '',
+              'rbac_audit and audit_events received different row counts in',
+              'the 30-day dual-write window (per migration spec §7.2).',
+              '',
+              'Action items:',
+              '1. Check the workflow log for the exact counts',
+              '2. Compare recent rows in both tables',
+              '3. If persistent, extend the dual-write window',
+              '4. Reference: docs/HH-CUTOVER-STATUS.md in A1-portfolio',
+              '',
+              'This is one of the 30-day window weekly checks.',
+              'Window started: 2026-06-22',
+              'Window closes: 2026-07-22'
+            ];
+            const body = bodyLines.join('\n');
             await github.rest.issues.create({
               owner: 'Armosphera',
               repo: 'A1-portfolio',
               title,
               body,
-              labels: ['hh-rbac-parity', 'karpathy', 'maintenance'],
+              labels: [labels: ['hh-rbac-parity', 'karpathy', 'maintenance'],
             });
