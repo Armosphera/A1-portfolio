@@ -889,3 +889,6 @@ Bridge state: 721 req (478A/243D), stable
 ### Git pushed
 
 61593e9  feat(rbac): add CRM bridge middleware
+## Wave 22 - CRM routes migration
+
+90 callsites migrated across 19 files. 846 tests pass. Karpathy cron added. Pushed: 97b5ef4
