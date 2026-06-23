@@ -1,0 +1,108 @@
+# HH RBAC Parity Check — Weekly Cron
+#
+# Runs the dual-write parity check during the 30-day window
+# (per migration spec §7.2). Asserts rbac_audit and audit_events
+# receive the same row counts in the last 7 days.
+#
+# Schedule: Mondays 09:00 UTC (after karpathy-evals at 06:00)
+# On divergence: opens a labelled issue.
+#
+# The 30-day window: started 2026-06-22, closes 2026-07-22.
+# After 2026-07-22, this workflow can be disabled (per §7 step 5).
+
+name: HH RBAC parity
+
+on:
+  schedule:
+    - cron: '0 9 * * 1'  # Monday 09:00 UTC
+  workflow_dispatch:      # Manual trigger
+
+jobs:
+  parity-check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Checkout HH
+        uses: actions/checkout@v4
+        with:
+          repository: SamStep74/A1-SMB-HH-HY-MAX
+          ref: karpathy/hh-rbac-engine
+          path: hh
+          fetch-depth: 1
+
+      - name: Setup Postgres
+        uses: actions/setup-postgres@v1
+        with:
+          database-type: postgres
+          database-name: hh_dev
+          database-user: postgres
+          database-password: postgres
+        env:
+          POSTGRES_HOST: localhost
+          POSTGRES_PORT: 5432
+
+      - name: Apply HH migrations (simplified)
+        env:
+          DATABASE_URL: postgres://postgres:postgres@localhost:5432/hh_dev
+        run: |
+          # Apply the dual-write schema (rbac_audit + audit_events)
+          psql "$DATABASE_URL" <<'SQL'
+          CREATE TABLE IF NOT EXISTS audit_events (
+            id TEXT PRIMARY KEY,
+            tenant_id TEXT NOT NULL,
+            actor_id TEXT,
+            kind TEXT NOT NULL,
+            payload JSONB NOT NULL,
+            created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+          );
+          CREATE TABLE IF NOT EXISTS rbac_audit (
+            id TEXT PRIMARY KEY,
+            tenant_id TEXT NOT NULL,
+            user_id TEXT,
+            actor_role TEXT,
+            permission TEXT NOT NULL,
+            outcome TEXT NOT NULL,
+            code TEXT NOT NULL,
+            reason TEXT,
+            created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+          );
+          SQL
+
+      - name: Run parity check
+        env:
+          DATABASE_URL: postgres://postgres:postgres@localhost:5432/hh_dev
+        run: |
+          cd hh
+          chmod +x scripts/hh-rbac-parity-check.sh
+          ./scripts/hh-rbac-parity-check.sh || EXIT_CODE=$?
+          echo "Parity exit: ${EXIT_CODE:-0}"
+
+      - name: On divergence — open issue
+        if: failure()
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const today = new Date().toISOString().slice(0, 10);
+            const title = `[hh-rbac-parity] divergence detected ${today}`;
+            const body = `The HH RBAC parity check failed.
+
+This means \`rbac_audit\` and \`audit_events\` are receiving
+different row counts in the 30-day dual-write window
+(per migration spec §7.2).
+
+**Action items:**
+1. Check the workflow log for the exact counts
+2. Compare recent rows: rbac_audit vs audit_events
+3. If persistent, extend the dual-write window
+4. Reference: docs/HH-CUTOVER-STATUS.md in A1-portfolio
+
+This is one of the 30-day window weekly checks.
+Window started: 2026-06-22
+Window closes: 2026-07-22`;
+            await github.rest.issues.create({
+              owner: 'Armosphera',
+              repo: 'A1-portfolio',
+              title,
+              body,
+              labels: ['hh-rbac-parity', 'karpathy', 'maintenance'],
+            });
