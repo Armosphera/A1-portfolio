@@ -222,6 +222,49 @@ else
   ok "Cutover scheduled: $DAYS_UNTIL days remaining ($TODAY → $CUTOVER_DATE)"
 fi
 
+
+# -------- 7. Karpathy contract drift --------
+printf "\n%s[7] Karpathy contract drift detector%s\n" "$BOLD" "$RESET"
+
+# Count Karpathy contracts (JSON files in evals/karpathy/)
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+REPO_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
+KARPATHY_DIR="$REPO_ROOT/evals/karpathy"
+
+if [ -d "$KARPATHY_DIR" ]; then
+  CONTRACT_COUNT=$(find "$KARPATHY_DIR" -name "*.json" | wc -l)
+  if [ "$CONTRACT_COUNT" -gt 0 ]; then
+    pass "$CONTRACT_COUNT Karpathy contracts present"
+    PASS=$((PASS+1))
+
+    # Check that all contracts have required fields
+    BROKEN_CONTRACTS=0
+    for contract in "$KARPATHY_DIR"/*.json; do
+      if [ -f "$contract" ]; then
+        # Validate JSON + required fields (id, eval.command, eval.metric.name, etc.)
+        if ! jq -e '.id and .eval.command and .eval.metric.name and .eval.successMetricValue and .eval.failureMetricValue' "$contract" >/dev/null 2>&1; then
+          BROKEN_CONTRACTS=$((BROKEN_CONTRACTS+1))
+          warn "Contract missing required fields: $(basename "$contract")"
+        fi
+      fi
+    done
+
+    if [ "$BROKEN_CONTRACTS" -eq 0 ]; then
+      pass "All contracts have required fields"
+      PASS=$((PASS+1))
+    else
+      fail "$BROKEN_CONTRACTS contracts missing required fields"
+      FAIL=$((FAIL+1))
+    fi
+  else
+    warn "No Karpathy contracts found (expected for clean state)"
+    WARN=$((WARN+1))
+  fi
+else
+  warn "No evals/karpathy/ directory"
+  WARN=$((WARN+1))
+fi
+
 # Check if dual-write parity cron is deployed locally
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PARITY_WORKFLOW="$SCRIPT_DIR/../.github/workflows/hh-rbac-parity.yml"
