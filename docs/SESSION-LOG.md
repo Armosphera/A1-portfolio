@@ -927,3 +927,19 @@ Live: api_ok=1 bridge_ok=1 tests=12/12 alerts=[]
 5 unique permission labels. 53 DB tables.
 
 Pushed: 9aff25d.
+## Wave 27 - CRM watchdog auto-restart + karpathy (autonomous)
+
+Watchdog enhancement:
+- Auto-restart on alert (CRM_AUTO_RESTART=1 default)
+- nohup+background (no blocking cron)
+- Verified: killed server, watchdog restarted in 9 seconds
+
+New ops:
+- ops/crm-start.sh: server starter
+- ops/crm-webhook-notify.sh: Slack/Discord alerts
+- ops/pending-workflow-push/karpathy-evals.yml + README.md
+
+New doc:
+- SETUP.md: complete operator guide
+
+Pushed: 5962715.
