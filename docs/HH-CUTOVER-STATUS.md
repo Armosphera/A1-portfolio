@@ -190,3 +190,27 @@ After 30 days of parity (per migration spec §7 step 2), the legacy
 - 7 commits to `karpathy/hh-rbac-engine` branch
 
 **Refs:** karpathy/hh-rbac-engine@2421639, docs/rbac-and-ux-migration.md §5/§7
+
+## Weekly parity monitoring (added 2026-06-23)
+
+A new parity check script ships with this branch:
+[`scripts/hh-rbac-parity-check.sh`](https://github.com/SamStep74/A1-SMB-HH-HY-MAX/blob/karpathy/hh-rbac-engine/scripts/hh-rbac-parity-check.sh).
+
+**Run weekly** (suggested Monday 09:00 UTC):
+
+```bash
+DATABASE_URL=postgres://... ./scripts/hh-rbac-parity-check.sh
+```
+
+**Asserts:**
+- `rbac_audit` row count (last 7 days) == `audit_events` row count (last 7 days)
+- Exits 0 on parity, 1 on divergence, 2 on missing config
+
+**Operator action on divergence (exit 1):**
+1. Compare recent rows in both tables
+2. Investigate which events diverged
+3. Either reconcile manually or extend the dual-write window
+
+**When to decommission:** After Day 30 (2026-07-22) once the legacy
+`audit_events` write is removed from `rbac-engine.ts`. The script
+becomes trivial (one table, no parity to check) and can be archived.
