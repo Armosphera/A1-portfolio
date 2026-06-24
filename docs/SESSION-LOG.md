@@ -943,3 +943,14 @@ New doc:
 - SETUP.md: complete operator guide
 
 Pushed: 5962715.
+## Wave 28 - CRM Grafana alerts + karpathy dryrun (autonomous)
+
+New observability:
+- deploy/grafana/alert-rules.yaml: 3 alert rules (down, deny-spike, no-traffic)
+- ops/crm-bridge-monitor.sh: unified cron (smoke + status + webhook)
+- ops/crm-karpathy-dryrun.sh: local dry-run, 7/7 PASS, 110 callsites
+
+Updated:
+- RUNBOOK.md: documented auto-restart + monitor + karpathy + alerts
+
+Pushed: ad3c95d.
