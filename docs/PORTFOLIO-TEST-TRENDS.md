@@ -18,14 +18,14 @@
 | A1-Localization-AM | **129** | curated (file count) |
 | A1-Suite-Local-ANT | **119** | curated (live from `vitest run`) |
 | A1-AI-Core | **65** | curated (file count) |
-| A1-Platform-MAX | **38** | curated (file count) |
+| A1-Platform-MAX | **50** | curated (file count, +12 errors tests) |
 | A1-SMB-CRM-HY-MAX-web | **8** | curated (file count) |
 | A1-Validator | 0 | curated (no test files) |
 | A1-portfolio | 0 | curated (no test files) |
 | a1-cross-link-sweep | 0 | curated (no test files) |
 | autoresearch-sboss | 0 | curated (no test files) |
 | A1-AI-ERP-SBOS-MSTUDIO-sovereign | NEVER_CREATED | manifest_only |
-| **TOTAL (curated)** | **10,048** | 14/15 repos |
+| **TOTAL (curated)** | **10,060** | 14/15 repos |
 
 ---
 
