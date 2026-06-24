@@ -912,3 +912,34 @@ New ops:
 
 Live: 50/50 load test success, 24ms avg latency.
 Pushed: f029f11.
+## Wave 26 - CRM bridge-status + crosscheck (autonomous)
+
+New:
+- ops/crm-bridge-status.sh (JSON snapshot for cron)
+- BRIDGE-CROSSCHECK.md (CRM-HY-MAX vs HH-HY-MAX)
+- BRIDGE-AUDIT.md for A1-Suite-Local-MAX
+
+Bug fixes:
+- crm-daily-summary.sh: now correctly parses vitest ANSI-colored output
+- crm-bridge-status.sh: proper JSON alerts array
+
+Live: api_ok=1 bridge_ok=1 tests=12/12 alerts=[]
+5 unique permission labels. 53 DB tables.
+
+Pushed: 9aff25d.
+## Wave 27 - CRM watchdog auto-restart + karpathy (autonomous)
+
+Watchdog enhancement:
+- Auto-restart on alert (CRM_AUTO_RESTART=1 default)
+- nohup+background (no blocking cron)
+- Verified: killed server, watchdog restarted in 9 seconds
+
+New ops:
+- ops/crm-start.sh: server starter
+- ops/crm-webhook-notify.sh: Slack/Discord alerts
+- ops/pending-workflow-push/karpathy-evals.yml + README.md
+
+New doc:
+- SETUP.md: complete operator guide
+
+Pushed: 5962715.
