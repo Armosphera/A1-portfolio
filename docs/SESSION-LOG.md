@@ -954,3 +954,19 @@ Updated:
 - RUNBOOK.md: documented auto-restart + monitor + karpathy + alerts
 
 Pushed: ad3c95d.
+## Wave 29 - HH-HY bridge parity with CRM (autonomous)
+
+Watchdog: auto-restart via HH_AUTO_RESTART + nohup+background
+Status: /tmp/hh-bridge-status.json machine-readable
+Bug fix: ALERTS_JSON quoting (was producing invalid JSON)
+Bug fix: tests.passing 29 → 55 (matches actual)
+
+New ops:
+- ops/hh-start.sh: server starter
+- ops/hh-karpathy-dryrun.sh: 7-check dry-run
+- ops/check-bridge-callsites.py: AST helper
+- deploy/grafana/alert-rules.yaml: 3 alerts
+- RUNBOOK.md: documented auto-restart + monitor + karpathy + alerts
+
+Live: 2 metrics emitted (1 denied, 1 allowed). 7/7 karpathy pass.
+Pushed: f228246 to SamStep74/A1-SMB-HH-HY.
