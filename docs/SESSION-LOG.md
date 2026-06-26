@@ -970,3 +970,62 @@ New ops:
 
 Live: 2 metrics emitted (1 denied, 1 allowed). 7/7 karpathy pass.
 Pushed: f228246 to SamStep74/A1-SMB-HH-HY.
+
+## Session close-out (autonomous)
+
+Both RBAC bridge pilots now at production parity.
+
+### Commits this session (5)
+
+| Repo | Commit | Wave |
+|---|---|---|
+| SamStep74/A1-SMB-CRM-HY-MAX | `5962715` | 27 — auto-restart + SETUP + webhook |
+| SamStep74/A1-SMB-CRM-HY-MAX | `ad3c95d` | 28 — Grafana alerts + bridge-monitor + karpathy dryrun |
+| SamStep74/A1-SMB-HH-HY | `f228246` | 29 — auto-restart + karpathy dryrun + Grafana alerts |
+| Armosphera/A1-portfolio | `2531b4c` | 26 entry |
+| Armosphera/A1-portfolio | `6e2e4e7` | 27 entry |
+| Armosphera/A1-portfolio | `525a3bd` | 28 entry |
+| Armosphera/A1-portfolio | `f042d78` | 29 entry |
+
+### CRM pilot — production-grade
+
+- 11 ops scripts
+- 12/12 bridge tests, 846/846 full project
+- 5+ unique permission labels emitted
+- Auto-restart on alert (CRM_AUTO_RESTART=1)
+- Webhook notifier (CRM_WEBHOOK_URL)
+- Karpathy dry-run: 7/7 PASS, 110 callsites
+- Grafana: 6 panels + 3 alert rules
+- Docs: SETUP.md, RUNBOOK.md (7005 chars), BRIDGE-CROSSCHECK.md
+
+### HH-HY pilot — production-grade
+
+- 11 ops scripts (matches CRM)
+- 55/55 bridge tests (node:test)
+- 2 unique permission labels emitted (1 allowed, 1 denied)
+- Auto-restart on alert (HH_AUTO_RESTART=1)
+- Karpathy dry-run: 7/7 PASS
+- Grafana: existing dashboard + 3 alert rules
+- Docs: RUNBOOK.md (7440 chars), BRIDGE-CROSSCHECK.md
+
+### Cron schedule (active)
+
+```
+*/30 * * * * crm-watchdog.sh        # CRM auto-restart + status
+*/5  * * * * crm-snapshot.sh         # CRM metrics retention
+*/30 * * * * watchdog-bridge.sh      # HH-HY auto-restart + status
+*/5  * * * * snapshot-metrics.sh     # HH-HY metrics retention
+```
+
+### Remaining manual actions
+
+1. Push `ops/pending-workflow-push/karpathy-evals.yml` via web UI for both repos
+   (OAuth tokens lack `workflow` scope; see `ops/pending-workflow-push/README.md`)
+2. Optional: set `CRM_WEBHOOK_URL` / Slack URL for proactive alerts
+3. Optional: provision Grafana alert rules via file provider
+4. Optional: migrate A1-ERP-HY / SBOS-A1-ERP to catalog-observability counter pattern
+
+### Karpathy cron — fully verified
+
+Both repos ready for cron push. Bridge code complete, dry-run passes,
+tests green, status machine-readable.
